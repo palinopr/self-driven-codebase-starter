@@ -6,6 +6,7 @@
 - Keep changes scoped. Prefer one feature or fix per pull request.
 - For feature work or any multi-file change, create or update `plans/<task-id>/goal.md`, `concepts.md`, `files.md`, `tasks.md`, `steps.md`, and `validation.md` before broad edits.
 - Use `npm run plan:new -- <task-id>` to scaffold a new task plan instead of copying template files by hand.
+- Use `npm run plans:list` when you need a quick readiness report across task plans before coding or publishing.
 - When a task is implemented and validated, use `npm run task:publish -- <task-id>` to create a draft PR instead of stopping at local-only changes.
 - Keep `plans/<task-id>/files.md` aligned with the actual diff because `task:publish` enforces that file scope before staging.
 - Add or update tests when behavior changes.
@@ -49,6 +50,7 @@ npm run ast-grep
 npm run docs:check
 npm run docs:stamp
 npm run plan:new -- 2026-03-30-first-feature
+npm run plans:list
 npm run task:publish -- 2026-03-30-first-feature --dry-run
 npm run demo:greet -- Jaime
 npm run demo:health

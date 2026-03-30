@@ -4,45 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import { normalizePlanTaskId } from "./plan-scaffold.js";
+import { analyzeTaskPlan } from "./task-plan.js";
 
 const execFileAsync = promisify(execFile);
-
-const REQUIRED_PLAN_FILES = [
-  "goal.md",
-  "concepts.md",
-  "files.md",
-  "tasks.md",
-  "steps.md",
-  "validation.md",
-] as const;
-
-const TEMPLATE_PLACEHOLDER_MARKERS = [
-  "State what the user should be able to do after this change.",
-  "Describe the broken flow, missing behavior, or reason this work exists.",
-  "Describe what proof would make this feel correct.",
-  "- concept:",
-  "  why it matters:",
-  "- file:",
-  "  why:",
-  "- file or area:",
-  "  why it should stay untouched:",
-  "- task 1",
-  "- task 2",
-  "- follow-up 1",
-  "- assumption 1",
-  "- open question 1",
-  "1. First implementation step",
-  "2. Second implementation step",
-  "3. Validation checkpoint",
-  "- command:",
-  "  expected signal:",
-  "- manual check:",
-  "  expected result:",
-  "- highest-risk area:",
-  "- what a human should inspect:",
-  "Describe how to undo the change safely if it behaves badly after merge.",
-] as const;
 
 export interface CommandSpec {
   readonly args: ReadonlyArray<string>;
@@ -80,7 +44,7 @@ export class MissingTaskPlanError extends Error {
 
   constructor(
     readonly taskDirectory: string,
-    readonly missingFiles: string[],
+    readonly missingFiles: ReadonlyArray<string>,
   ) {
     super(
       `Task plan is incomplete in ${taskDirectory}. Missing: ${missingFiles.join(", ")}`,
@@ -132,23 +96,22 @@ export async function buildTaskPublishDraft(
   rootDir: string,
   taskId: string,
 ): Promise<TaskPublishDraft> {
-  const normalizedTaskId = normalizePlanTaskId(taskId);
-  const taskDirectory = path.join(rootDir, "plans", normalizedTaskId);
-  const missingFiles = await findMissingPlanFiles(taskDirectory);
+  const planAnalysis = await analyzeTaskPlan(rootDir, taskId);
+  const { missingFiles, taskDirectory } = planAnalysis;
 
   if (missingFiles.length > 0) {
     throw new MissingTaskPlanError(taskDirectory, missingFiles);
   }
 
-  const unfilledPlan = await findUnfilledPlanFiles(rootDir, taskDirectory);
-
-  if (unfilledPlan.unfilledFiles.length > 0) {
+  if (planAnalysis.unfilledFiles.length > 0) {
     throw new UnfilledTaskPlanError(
       taskDirectory,
-      unfilledPlan.unfilledFiles,
-      unfilledPlan.placeholderMarkers,
+      planAnalysis.unfilledFiles,
+      planAnalysis.placeholderMarkers,
     );
   }
+
+  const normalizedTaskId = planAnalysis.taskId;
 
   const goal = await fs.readFile(path.join(taskDirectory, "goal.md"), "utf8");
   const concepts = await fs.readFile(
@@ -229,7 +192,10 @@ export async function publishTask(
 ): Promise<TaskPublishResult> {
   const draft = await buildTaskPublishDraft(rootDir, taskId);
   const runCommand = options.runCommand ?? defaultRunCommand;
-  const allowedPaths = await readAllowedScopePaths(draft.taskDirectory, taskId);
+  const allowedPaths = await readAllowedScopePaths(
+    draft.taskDirectory,
+    draft.taskId,
+  );
 
   if (!options.skipValidate) {
     await runCommand("npm", ["run", "validate"], rootDir);
@@ -352,72 +318,6 @@ async function defaultRunCommand(
   const result = await execFileAsync(command, [...args], { cwd });
 
   return result.stdout;
-}
-
-async function findMissingPlanFiles(taskDirectory: string): Promise<string[]> {
-  const missingFiles: string[] = [];
-
-  for (const requiredFile of REQUIRED_PLAN_FILES) {
-    const absolutePath = path.join(taskDirectory, requiredFile);
-
-    try {
-      await fs.access(absolutePath);
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ) {
-        missingFiles.push(requiredFile);
-        continue;
-      }
-
-      throw error;
-    }
-  }
-
-  return missingFiles;
-}
-
-async function findUnfilledPlanFiles(
-  rootDir: string,
-  taskDirectory: string,
-): Promise<{
-  placeholderMarkers: string[];
-  unfilledFiles: string[];
-}> {
-  const unfilledFiles = new Set<string>();
-  const placeholderMarkers = new Set<string>();
-  const templateDirectory = path.join(rootDir, "plans", "_template");
-
-  for (const requiredFile of REQUIRED_PLAN_FILES) {
-    const taskFilePath = path.join(taskDirectory, requiredFile);
-    const templateFilePath = path.join(templateDirectory, requiredFile);
-    const [taskContent, templateContent] = await Promise.all([
-      fs.readFile(taskFilePath, "utf8"),
-      fs.readFile(templateFilePath, "utf8"),
-    ]);
-
-    if (taskContent.trim() === templateContent.trim()) {
-      unfilledFiles.add(requiredFile);
-      placeholderMarkers.add("<file matches template>");
-      continue;
-    }
-
-    const taskLines = taskContent.split("\n").map((line) => line.trimEnd());
-
-    for (const marker of TEMPLATE_PLACEHOLDER_MARKERS) {
-      if (taskLines.includes(marker)) {
-        unfilledFiles.add(requiredFile);
-        placeholderMarkers.add(marker);
-      }
-    }
-  }
-
-  return {
-    placeholderMarkers: [...placeholderMarkers],
-    unfilledFiles: [...unfilledFiles],
-  };
 }
 
 async function readAllowedScopePaths(

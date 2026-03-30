@@ -17,6 +17,7 @@
     "docs:check": "tsx scripts/check-docs-drift.ts",
     "docs:stamp": "tsx scripts/stamp-docs-drift.ts",
     "plan:new": "tsx scripts/scaffold-plan.ts",
+    "plans:list": "tsx scripts/list-plans.ts",
     "task:publish": "tsx scripts/publish-task.ts",
     "demo:greet": "tsx scripts/run-greeting.ts",
     "demo:health": "tsx scripts/run-repo-health.ts",
