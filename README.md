@@ -95,7 +95,7 @@ Run `npm run docs:stamp` after reviewing intentional code changes that require d
 
 `npm run demo:health` prints a JSON report for the current repository. It tells you whether the starter still has:
 
-- anchored markdown docs
+- anchored Markdown docs
 - policy rules
 - background-agent prompts
 - required workflows
