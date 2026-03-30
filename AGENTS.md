@@ -1,4 +1,4 @@
-<!-- drift path="CLAUDE.md" hash="e347ab72f089c377" -->
+<!-- drift path="CLAUDE.md" hash="9815be5050319c72" -->
 # Agent Instructions
 
 This repository keeps its canonical repo contract in `CLAUDE.md`. This file mirrors the same operating rules for tools that look for `AGENTS.md`.
@@ -7,10 +7,11 @@ This repository keeps its canonical repo contract in `CLAUDE.md`. This file mirr
 
 - Use `npm run validate` before considering work complete.
 - Keep changes scoped. Prefer one feature or fix per pull request.
+- Assume the user interacts through Codex chat, not by editing repo files or typing the exact workflow commands.
 - For feature work or any multi-file change, create or update `plans/<task-id>/goal.md`, `concepts.md`, `files.md`, `tasks.md`, `steps.md`, and `validation.md` before broad edits.
-- Use `npm run plan:new -- <task-id>` to scaffold a new task plan instead of copying template files by hand.
-- Use `npm run plans:list` when you need a quick readiness report across task plans before coding or publishing.
-- When a task is implemented and validated, use `npm run task:publish -- <task-id>` to create a draft PR instead of stopping at local-only changes.
+- Run `npm run plan:new -- <task-id>` proactively when the user asks for meaningful work and no current plan exists.
+- Run `npm run plans:list` yourself when a readiness check would help the user or the current task.
+- When a task is implemented and validated, run `npm run task:publish -- <task-id>` to create a draft PR instead of stopping at local-only changes.
 - Keep `plans/<task-id>/files.md` aligned with the actual diff because `task:publish` enforces that file scope before staging.
 - Add or update tests when behavior changes.
 - Update docs when commands, structure, or user-visible behavior changes.
@@ -48,3 +49,4 @@ This repository keeps its canonical repo contract in `CLAUDE.md`. This file mirr
 - Keep `plans/`, `.memory/`, and `.agents/` intact so the repo can plan, remember, and review work explicitly.
 - Replace the greeting demo only after the first real product slice exists and is tested.
 - Keep `CLAUDE.md` and `AGENTS.md` aligned when instructions change.
+- Commands listed in this repo are tools for Codex to use. The operator should usually just describe the work in chat.

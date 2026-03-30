@@ -4,10 +4,11 @@
 
 - Use `npm run validate` before considering work complete.
 - Keep changes scoped. Prefer one feature or fix per pull request.
+- Assume the user interacts through Codex chat, not by editing repo files or typing the exact workflow commands.
 - For feature work or any multi-file change, create or update `plans/<task-id>/goal.md`, `concepts.md`, `files.md`, `tasks.md`, `steps.md`, and `validation.md` before broad edits.
-- Use `npm run plan:new -- <task-id>` to scaffold a new task plan instead of copying template files by hand.
-- Use `npm run plans:list` when you need a quick readiness report across task plans before coding or publishing.
-- When a task is implemented and validated, use `npm run task:publish -- <task-id>` to create a draft PR instead of stopping at local-only changes.
+- Run `npm run plan:new -- <task-id>` proactively when the user asks for meaningful work and no current plan exists.
+- Run `npm run plans:list` yourself when a readiness check would help the user or the current task.
+- When a task is implemented and validated, run `npm run task:publish -- <task-id>` to create a draft PR instead of stopping at local-only changes.
 - Keep `plans/<task-id>/files.md` aligned with the actual diff because `task:publish` enforces that file scope before staging.
 - Add or update tests when behavior changes.
 - Update docs when commands, structure, or user-visible behavior changes.
@@ -64,3 +65,4 @@ npm run validate
 - `AGENTS.md` mirrors this contract for tools that do not read `CLAUDE.md`.
 - Background-agent prompt assets live in `.agents/`.
 - The non-coder workflow docs live in `docs/non-coder-workflow.md`, `docs/agent-failure-modes.md`, `docs/agent-reasoning-workflow.md`, `docs/agent-eval-workflow.md`, `docs/repository-memory.md`, and `docs/template-setup.md`.
+- Commands listed here are Codex tools and reference material. The user does not need to invoke them manually for normal chat-driven work.

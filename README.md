@@ -2,6 +2,8 @@
 
 This repository is a reusable TypeScript template for building products with AI agents without giving up review, tests, or repo discipline.
 
+The intended operator experience is simple: the user describes the work in Codex chat, and Codex handles the repo mechanics.
+
 It includes:
 
 - a checked-in repo contract in `CLAUDE.md`
@@ -33,11 +35,19 @@ It includes:
 2. Rename the product in `package.json`, `README.md`, and `docs/architecture.md`.
 3. Read `docs/template-setup.md` before asking for the first feature.
 4. Open one small issue with `.github/ISSUE_TEMPLATE/ai-build-request.yml`.
-5. Run `npm run plan:new -- <task-id>` before broad feature work.
-6. Run `npm run plans:list` if you want a quick readiness report across existing task plans.
-7. Fill `concepts.md` when the task depends on domain semantics or evaluation rules, and keep `files.md` honest about the expected diff.
-8. When the task is ready, run `npm run task:publish -- <task-id>` to create a branch, commit, push, and draft PR.
-9. Keep `npm run validate` and `npm run demo:health` green as the repo grows.
+5. Tell Codex the first feature in chat.
+6. Codex should create the task plan, keep `concepts.md` and `files.md` honest, run readiness checks, validate the repo, and publish draft PRs when the task is ready.
+7. Keep `npm run validate` and `npm run demo:health` green as the repo grows.
+
+## Chat-First Workflow
+
+The user should not need to think in terms of repo files or shell commands.
+
+- The user describes the goal, constraints, and proof they care about in chat.
+- Codex creates or updates `plans/<task-id>/` before broad edits.
+- Codex runs `plans:list`, `validate`, and `task:publish` when the workflow calls for them.
+- The user reviews the PR, evidence, and risks in plain English.
+- The user decides whether the draft PR is ready to merge.
 
 ## Commands
 
@@ -160,7 +170,7 @@ Start with these files:
 - `.github/pull_request_template.md`
 - `plans/README.md`
 
-Those files are the human layer of the system. They help you ask for smaller changes, review evidence instead of code confidence, and watch for common AI failure modes like context drift, memory loss, hallucinated APIs, and sloppy broad diffs.
+Those files are the human layer of the system. They help you ask for smaller changes in chat, review evidence instead of code confidence, and watch for common AI failure modes like context drift, memory loss, hallucinated APIs, and sloppy broad diffs.
 
 `plans:list` gives you a local readiness report for every task folder, using the same missing-file and placeholder checks enforced by `task:publish`.
 
