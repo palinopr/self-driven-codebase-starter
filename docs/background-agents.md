@@ -1,6 +1,6 @@
 # Background Agents
 
-<!-- drift path=".github/workflows/nightly-validation.yml" hash="a7dd1214714b39a2" -->
+<!-- drift path=".github/workflows/nightly-validation.yml" hash="bcd9719434f1cd29" -->
 <!-- drift path=".agents/repo-maintenance.md" hash="0313ace025a559f1" -->
 <!-- drift path=".agents/docs-refresh.md" hash="8dd4afaa413580e7" -->
 
