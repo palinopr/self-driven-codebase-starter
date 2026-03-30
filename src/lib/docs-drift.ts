@@ -4,6 +4,13 @@ import path from "node:path";
 
 const DRIFT_PATTERN = /<!--\s*drift\s+path="([^"]+)"\s+hash="([^"]*)"\s*-->/g;
 
+class MissingDriftTargetError extends Error {
+  constructor(markdownPath: string, targetPath: string) {
+    super(`Cannot stamp ${markdownPath} because ${targetPath} does not exist.`);
+    this.name = "MissingDriftTargetError";
+  }
+}
+
 export interface DriftAnchor {
   readonly actualHash: string | null;
   readonly markdownPath: string;
@@ -92,9 +99,7 @@ export async function stampFile(
       const nextHash = await readFileHash(absoluteTargetPath);
 
       if (nextHash === null) {
-        throw new Error(
-          `Cannot stamp ${markdownPath} because ${targetPath} does not exist.`,
-        );
+        throw new MissingDriftTargetError(markdownPath, targetPath);
       }
 
       return `<!-- drift path="${targetPath}" hash="${nextHash}" -->`;

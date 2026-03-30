@@ -1,4 +1,4 @@
-import { collectAnchors } from "./lib/docs-drift.js";
+import { collectAnchors } from "../src/lib/docs-drift.js";
 
 async function main(): Promise<void> {
   const rootDir = process.cwd();
