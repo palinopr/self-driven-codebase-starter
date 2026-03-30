@@ -1,9 +1,9 @@
-<!-- drift path="README.md" hash="3c18bc07fae2ed42" -->
-<!-- drift path="package.json" hash="1d933e9d9d3cdd9a" -->
-<!-- drift path="CLAUDE.md" hash="3fc225f1b0d4b277" -->
-<!-- drift path="AGENTS.md" hash="ba26e4f0c090b889" -->
-<!-- drift path=".github/ISSUE_TEMPLATE/ai-build-request.yml" hash="5d6f2502f89b4809" -->
-<!-- drift path=".github/pull_request_template.md" hash="90eaca6568cb51b0" -->
+<!-- drift path="README.md" hash="63b1cb53942217de" -->
+<!-- drift path="package.json" hash="0a88353d58ca96c0" -->
+<!-- drift path="CLAUDE.md" hash="2a70ddf3f1df56c8" -->
+<!-- drift path="AGENTS.md" hash="fd89d2105abe9c18" -->
+<!-- drift path=".github/ISSUE_TEMPLATE/ai-build-request.yml" hash="f636073cf4435fa4" -->
+<!-- drift path=".github/pull_request_template.md" hash="32ab999f896c68ad" -->
 # Template Setup
 
 Use this repository as the starting point for a new product, not as a forever demo.
@@ -30,11 +30,17 @@ Do not delete these on day one:
 
 - `CLAUDE.md`
 - `AGENTS.md`
+- `.agents/`
+- `.memory/`
+- `plans/`
 - `.github/workflows/ci.yml`
 - `.github/pull_request_template.md`
 - `.github/ISSUE_TEMPLATE/ai-build-request.yml`
 - `rules/`
 - `src/services/repository-health-service.ts`
+- `docs/agent-reasoning-workflow.md`
+- `docs/agent-eval-workflow.md`
+- `docs/repository-memory.md`
 - `docs/non-coder-workflow.md`
 - `docs/agent-failure-modes.md`
 
@@ -56,7 +62,33 @@ Use the `AI Build Request` issue template and ask for one narrow outcome:
 
 Avoid giant prompts that mix product work, refactors, design changes, and infrastructure at the same time.
 
-## 6. Tighten The Rules From Real Failures
+## 6. Make The Agent Plan Before It Codes
+
+- Run `npm run plan:new -- <task-id>`.
+- Fill the goal, concepts, file scope, tasks, steps, and validation files before broad edits.
+- Keep the plan path in the pull request so reviewers can compare intent against the diff.
+- Use `npm run task:publish -- <task-id>` when the task is ready to become a draft PR.
+
+The plan is where you catch over-prediction before it becomes a messy patch.
+
+## 7. Teach The Repo Its Own Habits
+
+- Keep `.memory/` repo-specific.
+- Add a pattern only after it survives multiple merges or repeated review feedback.
+- Store maintainer preferences and file-placement habits there, not in ad-hoc chat history.
+
+This keeps the next agent from relearning the same lessons from scratch.
+
+## 8. Add Evaluation Discipline For Autonomous Loops
+
+- Keep development metrics separate from held-out evaluation.
+- Write stop conditions for experiment loops.
+- Record possible reward-hacking paths before trusting a strong metric.
+- Use `docs/agent-eval-workflow.md` for experiment-heavy or red-team work.
+
+This matters once agents are optimizing against metrics instead of just implementing product changes.
+
+## 9. Tighten The Rules From Real Failures
 
 Keep the starter rules, then add more only when the agent actually repeats a bad pattern. Good examples:
 
@@ -65,13 +97,14 @@ Keep the starter rules, then add more only when the agent actually repeats a bad
 - wrong file placement
 - docs that overclaim the implementation
 
-## 7. Protect Main Before Shipping
+## 10. Protect Main Before Shipping
 
 Before you call the new repo production-ready:
 
 - require pull requests to change `main`
 - require `validate` to pass
 - require conversation resolution
+- require AI usage disclosure in pull requests
 - keep a rollback note in every risky PR
 
 This template is meant to make AI-assisted product work safer, not merely faster.

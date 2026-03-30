@@ -1,5 +1,5 @@
 name: AI Build Request
-description: Ask the system to build one small, reviewable change.
+description: Ask the system to plan and build one small, reviewable change.
 title: "[build] "
 labels:
   - build-request
@@ -13,11 +13,11 @@ body:
     validations:
       required: true
   - type: textarea
-    id: acceptance
+    id: context
     attributes:
-      label: Acceptance Evidence
-      description: Describe what proof would make this feel correct to a non-coder.
-      placeholder: I should see..., The command should print..., The page should show...
+      label: Context
+      description: Explain the current problem, broken workflow, or missing behavior.
+      placeholder: Today the user has to..., The current page does not..., The existing command fails when...
     validations:
       required: true
   - type: textarea
@@ -27,15 +27,40 @@ body:
       description: What must not change or what rules matter here.
       placeholder: No auth changes, Keep current layout, Do not change billing logic...
   - type: textarea
-    id: risks
-    attributes:
-      label: Risk Areas
-      description: What worries you most about this change.
-      placeholder: Data loss, confusing UX, bad copy, broken deploy...
-  - type: textarea
     id: non_goals
     attributes:
       label: Non-Goals
       description: What should explicitly stay out of scope.
       placeholder: Do not redesign the whole app, Do not migrate the database...
-
+  - type: textarea
+    id: affected_area
+    attributes:
+      label: Likely Affected Area
+      description: Name the screens, commands, files, services, or docs you expect the work to touch.
+      placeholder: settings page, billing emails, src/services/..., docs/...
+  - type: textarea
+    id: concepts
+    attributes:
+      label: Key Concepts
+      description: Name the domain ideas or evaluation ideas that should guide the plan.
+      placeholder: Permission boundary, idempotency, held-out evaluation, reward hacking...
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Evidence
+      description: Describe what proof would make this feel correct to a non-coder.
+      placeholder: I should see..., The command should print..., The page should show...
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation Path
+      description: Say how the agent should prove the change worked.
+      placeholder: Run npm run validate, show the updated flow, include screenshots or logs...
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risk Areas
+      description: What worries you most about this change.
+      placeholder: Data loss, confusing UX, bad copy, broken deploy...

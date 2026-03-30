@@ -16,6 +16,8 @@
     "ast-grep": "ast-grep scan",
     "docs:check": "tsx scripts/check-docs-drift.ts",
     "docs:stamp": "tsx scripts/stamp-docs-drift.ts",
+    "plan:new": "tsx scripts/scaffold-plan.ts",
+    "task:publish": "tsx scripts/publish-task.ts",
     "demo:greet": "tsx scripts/run-greeting.ts",
     "demo:health": "tsx scripts/run-repo-health.ts",
     "validate": "npm run typecheck && npm run lint && npm run test && npm run ast-grep && npm run docs:check"

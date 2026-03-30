@@ -12,16 +12,41 @@ import {
 
 const REQUIRED_AGENT_PROMPTS = [
   ".agents/docs-refresh.md",
+  ".agents/experimenter.md",
+  ".agents/manager.md",
+  ".agents/onboarding.md",
   ".agents/pr-review.md",
   ".agents/repo-maintenance.md",
+  ".agents/reviewer.md",
+  ".agents/worker.md",
 ] as const;
 
 const REQUIRED_REPO_INSTRUCTIONS = ["AGENTS.md", "CLAUDE.md"] as const;
 
 const REQUIRED_GUIDES = [
   "docs/agent-failure-modes.md",
+  "docs/agent-eval-workflow.md",
+  "docs/agent-reasoning-workflow.md",
+  "docs/background-agents.md",
   "docs/non-coder-workflow.md",
+  "docs/repository-memory.md",
   "docs/template-setup.md",
+] as const;
+
+const REQUIRED_MEMORY_FILES = [
+  ".memory/maintainer-preferences.md",
+  ".memory/patterns.json",
+  ".memory/repository-skills.md",
+] as const;
+
+const REQUIRED_PLAN_TEMPLATES = [
+  "plans/README.md",
+  "plans/_template/concepts.md",
+  "plans/_template/files.md",
+  "plans/_template/goal.md",
+  "plans/_template/steps.md",
+  "plans/_template/tasks.md",
+  "plans/_template/validation.md",
 ] as const;
 
 const REQUIRED_TEMPLATES = [
@@ -41,7 +66,9 @@ export interface RepositoryHealthReport {
   readonly guideDocuments: number;
   readonly instructionFiles: number;
   readonly issues: ReadonlyArray<string>;
+  readonly memoryFiles: number;
   readonly markdownDocuments: number;
+  readonly planTemplateFiles: number;
   readonly policyRuleFiles: number;
   readonly staleAnchors: number;
   readonly status: "healthy" | "needs-attention";
@@ -115,6 +142,21 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
+async function countPresentFiles(
+  rootDir: string,
+  requiredFiles: ReadonlyArray<string>,
+): Promise<number> {
+  let present = 0;
+
+  for (const requiredFile of requiredFiles) {
+    if (await fileExists(path.join(rootDir, requiredFile))) {
+      present += 1;
+    }
+  }
+
+  return present;
+}
+
 function toRepositoryInspectionError(
   rootDir: string,
   cause: unknown,
@@ -165,21 +207,8 @@ export const RepositoryHealthServiceLive = Layer.effect(
           const instructionFiles = yield* Effect.tryPromise({
             catch: (cause) =>
               toRepositoryInspectionError(resolvedRootDir, cause),
-            try: async () => {
-              let present = 0;
-
-              for (const requiredInstruction of REQUIRED_REPO_INSTRUCTIONS) {
-                if (
-                  await fileExists(
-                    path.join(resolvedRootDir, requiredInstruction),
-                  )
-                ) {
-                  present += 1;
-                }
-              }
-
-              return present;
-            },
+            try: () =>
+              countPresentFiles(resolvedRootDir, REQUIRED_REPO_INSTRUCTIONS),
           });
           const workflowFiles = yield* Effect.tryPromise({
             catch: (cause) =>
@@ -193,36 +222,24 @@ export const RepositoryHealthServiceLive = Layer.effect(
           const guideDocuments = yield* Effect.tryPromise({
             catch: (cause) =>
               toRepositoryInspectionError(resolvedRootDir, cause),
-            try: async () => {
-              let present = 0;
-
-              for (const requiredGuide of REQUIRED_GUIDES) {
-                if (
-                  await fileExists(path.join(resolvedRootDir, requiredGuide))
-                ) {
-                  present += 1;
-                }
-              }
-
-              return present;
-            },
+            try: () => countPresentFiles(resolvedRootDir, REQUIRED_GUIDES),
+          });
+          const memoryFiles = yield* Effect.tryPromise({
+            catch: (cause) =>
+              toRepositoryInspectionError(resolvedRootDir, cause),
+            try: () =>
+              countPresentFiles(resolvedRootDir, REQUIRED_MEMORY_FILES),
+          });
+          const planTemplateFiles = yield* Effect.tryPromise({
+            catch: (cause) =>
+              toRepositoryInspectionError(resolvedRootDir, cause),
+            try: () =>
+              countPresentFiles(resolvedRootDir, REQUIRED_PLAN_TEMPLATES),
           });
           const templateFiles = yield* Effect.tryPromise({
             catch: (cause) =>
               toRepositoryInspectionError(resolvedRootDir, cause),
-            try: async () => {
-              let present = 0;
-
-              for (const requiredTemplate of REQUIRED_TEMPLATES) {
-                if (
-                  await fileExists(path.join(resolvedRootDir, requiredTemplate))
-                ) {
-                  present += 1;
-                }
-              }
-
-              return present;
-            },
+            try: () => countPresentFiles(resolvedRootDir, REQUIRED_TEMPLATES),
           });
           const anchoredDocuments = new Set(
             anchors.map((anchor) => anchor.markdownPath),
@@ -237,6 +254,8 @@ export const RepositoryHealthServiceLive = Layer.effect(
             ...REQUIRED_REPO_INSTRUCTIONS,
             ...REQUIRED_AGENT_PROMPTS,
             ...REQUIRED_GUIDES,
+            ...REQUIRED_MEMORY_FILES,
+            ...REQUIRED_PLAN_TEMPLATES,
             ...REQUIRED_TEMPLATES,
             ...REQUIRED_WORKFLOWS,
           ];
@@ -260,10 +279,8 @@ export const RepositoryHealthServiceLive = Layer.effect(
             issues.push("No structural policy rules were found in rules/.");
           }
 
-          if (agentPromptFiles === 0) {
-            issues.push(
-              "No background-agent prompt assets were found in .agents/.",
-            );
+          if (agentPromptFiles < REQUIRED_AGENT_PROMPTS.length) {
+            issues.push("The agent prompt scaffold is incomplete in .agents/.");
           }
 
           if (instructionFiles < REQUIRED_REPO_INSTRUCTIONS.length) {
@@ -273,8 +290,18 @@ export const RepositoryHealthServiceLive = Layer.effect(
           }
 
           if (guideDocuments < REQUIRED_GUIDES.length) {
+            issues.push("The operating guides are incomplete in docs/.");
+          }
+
+          if (memoryFiles < REQUIRED_MEMORY_FILES.length) {
             issues.push(
-              "The non-coder operating guides are incomplete in docs/.",
+              "The repository memory scaffold is incomplete in .memory/.",
+            );
+          }
+
+          if (planTemplateFiles < REQUIRED_PLAN_TEMPLATES.length) {
+            issues.push(
+              "The task-planning templates are incomplete in plans/.",
             );
           }
 
@@ -310,7 +337,9 @@ export const RepositoryHealthServiceLive = Layer.effect(
             guideDocuments,
             instructionFiles,
             issues,
+            memoryFiles,
             markdownDocuments: markdownFiles.length,
+            planTemplateFiles,
             policyRuleFiles,
             staleAnchors,
             status: issues.length === 0 ? "healthy" : "needs-attention",

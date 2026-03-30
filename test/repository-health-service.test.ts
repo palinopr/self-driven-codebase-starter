@@ -16,11 +16,13 @@ async function createFixtureRoot(): Promise<string> {
   const rootDir = await mkdtemp(path.join(os.tmpdir(), "repo-health-"));
 
   await mkdir(path.join(rootDir, ".agents"), { recursive: true });
+  await mkdir(path.join(rootDir, ".memory"), { recursive: true });
   await mkdir(path.join(rootDir, ".github", "ISSUE_TEMPLATE"), {
     recursive: true,
   });
   await mkdir(path.join(rootDir, ".github", "workflows"), { recursive: true });
   await mkdir(path.join(rootDir, "docs"), { recursive: true });
+  await mkdir(path.join(rootDir, "plans", "_template"), { recursive: true });
   await mkdir(path.join(rootDir, "rules"), { recursive: true });
   await mkdir(path.join(rootDir, "src"), { recursive: true });
 
@@ -41,12 +43,35 @@ async function createFixtureRoot(): Promise<string> {
     "# Docs Refresh\n",
   );
   await writeFile(
+    path.join(rootDir, ".agents", "experimenter.md"),
+    "# Experimenter\n",
+  );
+  await writeFile(path.join(rootDir, ".agents", "manager.md"), "# Manager\n");
+  await writeFile(
+    path.join(rootDir, ".agents", "onboarding.md"),
+    "# Onboarding\n",
+  );
+  await writeFile(
     path.join(rootDir, ".agents", "repo-maintenance.md"),
     "# Repo Maintenance\n",
   );
+  await writeFile(path.join(rootDir, ".agents", "reviewer.md"), "# Reviewer\n");
   await writeFile(
     path.join(rootDir, ".agents", "pr-review.md"),
     "# PR Review\n",
+  );
+  await writeFile(path.join(rootDir, ".agents", "worker.md"), "# Worker\n");
+  await writeFile(
+    path.join(rootDir, ".memory", "repository-skills.md"),
+    "# Repository Skills\n",
+  );
+  await writeFile(
+    path.join(rootDir, ".memory", "maintainer-preferences.md"),
+    "# Maintainer Preferences\n",
+  );
+  await writeFile(
+    path.join(rootDir, ".memory", "patterns.json"),
+    '{\n  "lastReviewedOn": "2026-03-30"\n}\n',
   );
   await writeFile(
     path.join(rootDir, ".github", "pull_request_template.md"),
@@ -96,6 +121,17 @@ async function createFixtureRoot(): Promise<string> {
     ].join("\n"),
   );
   await writeFile(
+    path.join(rootDir, "docs", "background-agents.md"),
+    [
+      "# Background Agents",
+      "",
+      '<!-- drift path=".agents/repo-maintenance.md" hash="" -->',
+      "",
+      "This fixture documents the background-agent scaffold.",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
     path.join(rootDir, "docs", "agent-failure-modes.md"),
     [
       "# Failure Modes",
@@ -103,6 +139,41 @@ async function createFixtureRoot(): Promise<string> {
       '<!-- drift path="src/feature.ts" hash="" -->',
       "",
       "This fixture documents agent failure modes.",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
+    path.join(rootDir, "docs", "agent-eval-workflow.md"),
+    [
+      "# Agent Eval Workflow",
+      "",
+      '<!-- drift path=".agents/experimenter.md" hash="" -->',
+      "",
+      "This fixture documents experiment evaluation.",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
+    path.join(rootDir, "docs", "agent-reasoning-workflow.md"),
+    [
+      "# Agent Reasoning Workflow",
+      "",
+      '<!-- drift path="plans/_template/concepts.md" hash="" -->',
+      "",
+      '<!-- drift path="plans/_template/goal.md" hash="" -->',
+      "",
+      "This fixture documents staged reasoning.",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
+    path.join(rootDir, "docs", "repository-memory.md"),
+    [
+      "# Repository Memory",
+      "",
+      '<!-- drift path=".memory/repository-skills.md" hash="" -->',
+      "",
+      "This fixture documents repository memory.",
       "",
     ].join("\n"),
   );
@@ -117,11 +188,40 @@ async function createFixtureRoot(): Promise<string> {
       "",
     ].join("\n"),
   );
+  await writeFile(path.join(rootDir, "plans", "README.md"), "# Task Plans\n");
+  await writeFile(
+    path.join(rootDir, "plans", "_template", "concepts.md"),
+    "# Concepts\n",
+  );
+  await writeFile(
+    path.join(rootDir, "plans", "_template", "goal.md"),
+    "# Goal\n",
+  );
+  await writeFile(
+    path.join(rootDir, "plans", "_template", "files.md"),
+    "# Files\n",
+  );
+  await writeFile(
+    path.join(rootDir, "plans", "_template", "tasks.md"),
+    "# Tasks\n",
+  );
+  await writeFile(
+    path.join(rootDir, "plans", "_template", "steps.md"),
+    "# Steps\n",
+  );
+  await writeFile(
+    path.join(rootDir, "plans", "_template", "validation.md"),
+    "# Validation\n",
+  );
 
   await stampFile(rootDir, "AGENTS.md");
   await stampFile(rootDir, path.join("docs", "architecture.md"));
+  await stampFile(rootDir, path.join("docs", "background-agents.md"));
   await stampFile(rootDir, path.join("docs", "non-coder-workflow.md"));
   await stampFile(rootDir, path.join("docs", "agent-failure-modes.md"));
+  await stampFile(rootDir, path.join("docs", "agent-eval-workflow.md"));
+  await stampFile(rootDir, path.join("docs", "agent-reasoning-workflow.md"));
+  await stampFile(rootDir, path.join("docs", "repository-memory.md"));
   await stampFile(rootDir, path.join("docs", "template-setup.md"));
 
   return rootDir;
@@ -139,12 +239,14 @@ describe("inspectRepositoryHealth", () => {
       );
 
       expect(report).toEqual({
-        agentPromptFiles: 3,
-        anchoredDocuments: 5,
-        guideDocuments: 3,
+        agentPromptFiles: 8,
+        anchoredDocuments: 9,
+        guideDocuments: 7,
         instructionFiles: 2,
         issues: [],
-        markdownDocuments: 10,
+        memoryFiles: 3,
+        markdownDocuments: 28,
+        planTemplateFiles: 7,
         policyRuleFiles: 1,
         staleAnchors: 0,
         status: "healthy",
