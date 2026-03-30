@@ -1,4 +1,4 @@
-<!-- drift path="CLAUDE.md" hash="e347ab72f089c377" -->
+<!-- drift path="CLAUDE.md" hash="9815be5050319c72" -->
 <!-- drift path="rules/no-throw-new-error.yml" hash="44baf5ef71e2a831" -->
 <!-- drift path="src/services/repository-health-service.ts" hash="825aff477095fefa" -->
 # Agent Failure Modes

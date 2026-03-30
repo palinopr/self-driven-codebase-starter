@@ -15,7 +15,7 @@ This repository does not let an agent jump straight from issue to patch on meani
 
 ## Required Stages
 
-For feature work or any multi-file change, write the plan before broad edits:
+For feature work or any multi-file change, the agent should create and maintain the plan before broad edits:
 
 1. Issue understanding
 2. Concepts
@@ -28,7 +28,7 @@ Those stages live in `plans/<task-id>/`.
 
 ## Required Artifacts
 
-Run `npm run plan:new -- <task-id>` and fill:
+When the user asks for meaningful work in chat, the agent should run `npm run plan:new -- <task-id>` and fill:
 
 - `goal.md`
 - `concepts.md`
@@ -39,7 +39,7 @@ Run `npm run plan:new -- <task-id>` and fill:
 
 Keep the plan small, concrete, and reviewable.
 
-If you need a quick repo-wide readiness check before coding or publishing, run:
+If the user asks whether work is ready before coding or publishing, the agent should run:
 
 ```bash
 npm run plans:list
@@ -80,7 +80,7 @@ If the change drifted outside the expected file set, the PR should say so direct
 
 ## Publish Step
 
-When implementation and validation are done, publish the task with:
+When implementation and validation are done, the agent should publish the task with:
 
 ```bash
 npm run task:publish -- <task-id>

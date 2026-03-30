@@ -1,7 +1,7 @@
-<!-- drift path="README.md" hash="936d0de0ab3ffef4" -->
+<!-- drift path="README.md" hash="c69a8849f5cab7d3" -->
 <!-- drift path="package.json" hash="95d490ab524987ac" -->
-<!-- drift path="CLAUDE.md" hash="e347ab72f089c377" -->
-<!-- drift path="AGENTS.md" hash="eaecf9e55d2a0571" -->
+<!-- drift path="CLAUDE.md" hash="9815be5050319c72" -->
+<!-- drift path="AGENTS.md" hash="e296bcca6ca3d3fa" -->
 <!-- drift path=".github/ISSUE_TEMPLATE/ai-build-request.yml" hash="f636073cf4435fa4" -->
 <!-- drift path=".github/pull_request_template.md" hash="32ab999f896c68ad" -->
 # Template Setup
@@ -62,12 +62,14 @@ Use the `AI Build Request` issue template and ask for one narrow outcome:
 
 Avoid giant prompts that mix product work, refactors, design changes, and infrastructure at the same time.
 
+The intended operator flow is conversational: describe the outcome in Codex chat, then let Codex translate that request into the repo plan, validation, and publish steps.
+
 ## 6. Make The Agent Plan Before It Codes
 
-- Run `npm run plan:new -- <task-id>`.
-- Fill the goal, concepts, file scope, tasks, steps, and validation files before broad edits.
-- Keep the plan path in the pull request so reviewers can compare intent against the diff.
-- Use `npm run task:publish -- <task-id>` when the task is ready to become a draft PR.
+- Codex should run `npm run plan:new -- <task-id>`.
+- Codex should fill the goal, concepts, file scope, tasks, steps, and validation files before broad edits.
+- Codex should keep the plan path in the pull request so reviewers can compare intent against the diff.
+- Codex should use `npm run task:publish -- <task-id>` when the task is ready to become a draft PR.
 
 The plan is where you catch over-prediction before it becomes a messy patch.
 
