@@ -99,6 +99,6 @@ Run `npm run docs:stamp` after reviewing intentional code changes that require d
 - policy rules
 - background-agent prompts
 - required workflows
-- stale documentation links
+- stale docs-drift anchors
 
 That makes the repo able to inspect its own engineering scaffolding, not just describe it in prose.
