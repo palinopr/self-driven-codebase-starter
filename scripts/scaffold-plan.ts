@@ -1,4 +1,4 @@
-import { scaffoldPlan } from "../src/lib/plan-scaffold.js";
+import { normalizePlanTaskId, scaffoldPlan } from "../src/lib/plan-scaffold.js";
 
 async function main(): Promise<void> {
   const taskId = process.argv[2];
@@ -10,7 +10,8 @@ async function main(): Promise<void> {
   }
 
   try {
-    const result = await scaffoldPlan(process.cwd(), taskId);
+    const normalizedTaskId = normalizePlanTaskId(taskId);
+    const result = await scaffoldPlan(process.cwd(), normalizedTaskId);
 
     process.stdout.write(
       `Created ${result.taskDirectory} with ${result.filesCreated} file${result.filesCreated === 1 ? "" : "s"}.\n`,

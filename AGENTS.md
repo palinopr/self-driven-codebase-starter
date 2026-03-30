@@ -1,4 +1,4 @@
-<!-- drift path="CLAUDE.md" hash="d24dd8ee86443f06" -->
+<!-- drift path="CLAUDE.md" hash="2a70ddf3f1df56c8" -->
 # Agent Instructions
 
 This repository keeps its canonical repo contract in `CLAUDE.md`. This file mirrors the same operating rules for tools that look for `AGENTS.md`.
@@ -10,6 +10,7 @@ This repository keeps its canonical repo contract in `CLAUDE.md`. This file mirr
 - For feature work or any multi-file change, create or update `plans/<task-id>/goal.md`, `concepts.md`, `files.md`, `tasks.md`, `steps.md`, and `validation.md` before broad edits.
 - Use `npm run plan:new -- <task-id>` to scaffold a new task plan instead of copying template files by hand.
 - When a task is implemented and validated, use `npm run task:publish -- <task-id>` to create a draft PR instead of stopping at local-only changes.
+- Keep `plans/<task-id>/files.md` aligned with the actual diff because `task:publish` enforces that file scope before staging.
 - Add or update tests when behavior changes.
 - Update docs when commands, structure, or user-visible behavior changes.
 - Update `.memory/` only when a repo pattern is stable enough to reuse, not for one-off notes.

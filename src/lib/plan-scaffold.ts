@@ -38,10 +38,7 @@ export class PlanAlreadyExistsError extends Error {
   }
 }
 
-export async function scaffoldPlan(
-  rootDir: string,
-  taskId: string,
-): Promise<PlanScaffoldResult> {
+export function normalizePlanTaskId(taskId: string): string {
   const normalizedTaskId = taskId.trim();
 
   if (
@@ -50,6 +47,15 @@ export async function scaffoldPlan(
   ) {
     throw new InvalidPlanTaskIdError(taskId);
   }
+
+  return normalizedTaskId;
+}
+
+export async function scaffoldPlan(
+  rootDir: string,
+  taskId: string,
+): Promise<PlanScaffoldResult> {
+  const normalizedTaskId = normalizePlanTaskId(taskId);
 
   const templateDirectory = path.join(rootDir, "plans", "_template");
   const taskDirectory = path.join(rootDir, "plans", normalizedTaskId);

@@ -1,7 +1,7 @@
 <!-- drift path=".github/pull_request_template.md" hash="32ab999f896c68ad" -->
 <!-- drift path=".github/ISSUE_TEMPLATE/ai-build-request.yml" hash="f636073cf4435fa4" -->
 <!-- drift path="package.json" hash="0a88353d58ca96c0" -->
-<!-- drift path="plans/README.md" hash="5b84832a201f79ee" -->
+<!-- drift path="plans/README.md" hash="f05b1d3eed4b083b" -->
 # Non-Coder Workflow
 
 This guide is for someone who wants to build with AI but does not deeply know how to read code.

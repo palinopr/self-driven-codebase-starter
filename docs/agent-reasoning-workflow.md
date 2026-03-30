@@ -79,3 +79,5 @@ npm run task:publish -- <task-id>
 ```
 
 Use `--dry-run` first if you want to preview the Git and GitHub actions without creating the branch or PR.
+
+The publish step also checks the current diff against `plans/<task-id>/files.md`. If the diff includes files outside `Confirmed Files` and `Candidate Files`, the command refuses to stage and publish the task until the plan and the code match again.

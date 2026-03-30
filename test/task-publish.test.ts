@@ -67,7 +67,23 @@ async function createFixtureRoot(): Promise<string> {
   );
   await writeFile(
     path.join(rootDir, "plans", "2026-03-30-demo-task", "files.md"),
-    "# Files\n",
+    [
+      "# File Localization",
+      "",
+      "## Confirmed Files",
+      "",
+      "- `README.md`",
+      "- `src/lib/task-publish.ts`",
+      "",
+      "## Candidate Files",
+      "",
+      "- `plans/2026-03-30-demo-task/`",
+      "",
+      "## Files To Avoid",
+      "",
+      "- `src/services/greeting-service.ts`",
+      "",
+    ].join("\n"),
   );
   await writeFile(
     path.join(rootDir, "plans", "2026-03-30-demo-task", "tasks.md"),
@@ -210,7 +226,7 @@ describe("publishTask", () => {
           command: "git",
         },
         {
-          args: ["add", "-A"],
+          args: ["add", "README.md"],
           command: "git",
         },
         {
@@ -234,6 +250,85 @@ describe("publishTask", () => {
           command: "gh",
         },
       ]);
+    } finally {
+      await rm(rootDir, { force: true, recursive: true });
+    }
+  });
+
+  it("allows changes inside the current task plan folder even if only the plan changed", async () => {
+    const rootDir = await createFixtureRoot();
+    const calls: string[] = [];
+
+    const fakeRunner: CommandRunner = async (command, args) => {
+      calls.push(`${command} ${args.join(" ")}`);
+
+      if (command === "git" && args.join(" ") === "status --porcelain") {
+        return " M plans/2026-03-30-demo-task/validation.md\n";
+      }
+
+      if (
+        command === "git" &&
+        args.join(" ") === "rev-parse --abbrev-ref HEAD"
+      ) {
+        return "main\n";
+      }
+
+      return "";
+    };
+
+    try {
+      const result = await publishTask(rootDir, "2026-03-30-demo-task", {
+        dryRun: true,
+        skipValidate: true,
+        runCommand: fakeRunner,
+      });
+
+      expect(result.plannedCommands.at(-1)).toEqual({
+        args: [
+          "pr",
+          "create",
+          "--draft",
+          "--title",
+          result.prTitle,
+          "--body-file",
+          "<tempfile>",
+        ],
+        command: "gh",
+      });
+    } finally {
+      await rm(rootDir, { force: true, recursive: true });
+    }
+  });
+
+  it("fails when changed files drift outside the planned scope", async () => {
+    const rootDir = await createFixtureRoot();
+
+    const fakeRunner: CommandRunner = async (command, args) => {
+      if (command === "git" && args.join(" ") === "status --porcelain") {
+        return " M package.json\n";
+      }
+
+      if (
+        command === "git" &&
+        args.join(" ") === "rev-parse --abbrev-ref HEAD"
+      ) {
+        return "main\n";
+      }
+
+      return "";
+    };
+
+    try {
+      await expect(
+        publishTask(rootDir, "2026-03-30-demo-task", {
+          dryRun: true,
+          skipValidate: true,
+          runCommand: fakeRunner,
+        }),
+      ).rejects.toMatchObject({
+        _tag: "ScopeDriftError",
+        unexpectedFiles: ["package.json"],
+      });
     } finally {
       await rm(rootDir, { force: true, recursive: true });
     }

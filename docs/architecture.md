@@ -4,8 +4,8 @@
 <!-- drift path="src/services/repository-health-service.ts" hash="825aff477095fefa" -->
 <!-- drift path="src/observability/app-logger.ts" hash="22c93b724bbaa660" -->
 <!-- drift path="src/lib/docs-drift.ts" hash="a72d2e1a2804664b" -->
-<!-- drift path="src/lib/plan-scaffold.ts" hash="aa6b5dc294efb630" -->
-<!-- drift path="src/lib/task-publish.ts" hash="1b0c3da75c0e68c4" -->
+<!-- drift path="src/lib/plan-scaffold.ts" hash="24554b7aa6ab5987" -->
+<!-- drift path="src/lib/task-publish.ts" hash="a54ea3e191b57cb0" -->
 
 This repository uses a small, explicit vertical slice to demonstrate an agent-friendly layout.
 

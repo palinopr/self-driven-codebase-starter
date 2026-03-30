@@ -19,6 +19,8 @@ npm run task:publish -- <task-id>
 
 That command validates the repo, creates a `codex/<task-id>` branch, commits the current changes, pushes the branch, and opens a draft PR. Use `--dry-run` to preview the Git and GitHub commands without publishing.
 
+Before it stages anything, `task:publish` compares the current diff against `Confirmed Files` and `Candidate Files` in `files.md`. If the diff contains files outside that scope, publish fails so you can fix the plan or narrow the change.
+
 ## What `concepts.md` Is For
 
 Use `concepts.md` to name the domain or evaluation ideas that the task depends on before code changes begin.

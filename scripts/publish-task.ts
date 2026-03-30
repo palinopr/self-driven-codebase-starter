@@ -1,3 +1,4 @@
+import { normalizePlanTaskId } from "../src/lib/plan-scaffold.js";
 import { publishTask } from "../src/lib/task-publish.js";
 
 async function main(): Promise<void> {
@@ -11,11 +12,24 @@ async function main(): Promise<void> {
     return;
   }
 
+  const allowedFlags = new Set(["--dry-run", "--skip-validate"]);
+  const unknownFlags = flags.filter((flag) => !allowedFlags.has(flag));
+
+  if (unknownFlags.length > 0) {
+    process.stderr.write(`Unknown flag(s): ${unknownFlags.join(", ")}\n`);
+    process.stderr.write(
+      "Usage: npm run task:publish -- <task-id> [--dry-run] [--skip-validate]\n",
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const dryRun = flags.includes("--dry-run");
   const skipValidate = flags.includes("--skip-validate");
 
   try {
-    const result = await publishTask(process.cwd(), taskId, {
+    const normalizedTaskId = normalizePlanTaskId(taskId);
+    const result = await publishTask(process.cwd(), normalizedTaskId, {
       dryRun,
       skipValidate,
     });

@@ -1,7 +1,7 @@
-<!-- drift path="README.md" hash="b6d98605fcbf7428" -->
+<!-- drift path="README.md" hash="63b1cb53942217de" -->
 <!-- drift path="package.json" hash="0a88353d58ca96c0" -->
-<!-- drift path="CLAUDE.md" hash="d24dd8ee86443f06" -->
-<!-- drift path="AGENTS.md" hash="940c7fc3961825ca" -->
+<!-- drift path="CLAUDE.md" hash="2a70ddf3f1df56c8" -->
+<!-- drift path="AGENTS.md" hash="fd89d2105abe9c18" -->
 <!-- drift path=".github/ISSUE_TEMPLATE/ai-build-request.yml" hash="f636073cf4435fa4" -->
 <!-- drift path=".github/pull_request_template.md" hash="32ab999f896c68ad" -->
 # Template Setup

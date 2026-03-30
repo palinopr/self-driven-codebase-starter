@@ -30,7 +30,7 @@
     - `validation.md`
 - manual check: run the same command again
   expected result: it fails without overwriting the existing folder
-  result: passed with the message `Plan directory already exists: .../plans/2026-03-30-cli-demo`
+  result: passed with the message `Plan directory already exists: .../plans/2026-03-30-example-plan`
 
 ## Notes From The Exercise
 

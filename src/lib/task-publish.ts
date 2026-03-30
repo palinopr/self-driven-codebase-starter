@@ -4,6 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
+import { normalizePlanTaskId } from "./plan-scaffold.js";
+
 const execFileAsync = promisify(execFile);
 
 const REQUIRED_PLAN_FILES = [
@@ -111,11 +113,27 @@ export class UnfilledTaskPlanError extends Error {
   }
 }
 
+export class ScopeDriftError extends Error {
+  readonly _tag = "ScopeDriftError";
+
+  constructor(
+    readonly taskDirectory: string,
+    readonly allowedPaths: ReadonlyArray<string>,
+    readonly unexpectedFiles: ReadonlyArray<string>,
+  ) {
+    super(
+      `Task publish scope drift in ${taskDirectory}. Unexpected files: ${unexpectedFiles.join(", ")}`,
+    );
+    this.name = "ScopeDriftError";
+  }
+}
+
 export async function buildTaskPublishDraft(
   rootDir: string,
   taskId: string,
 ): Promise<TaskPublishDraft> {
-  const taskDirectory = path.join(rootDir, "plans", taskId);
+  const normalizedTaskId = normalizePlanTaskId(taskId);
+  const taskDirectory = path.join(rootDir, "plans", normalizedTaskId);
   const missingFiles = await findMissingPlanFiles(taskDirectory);
 
   if (missingFiles.length > 0) {
@@ -153,15 +171,15 @@ export async function buildTaskPublishDraft(
   );
   const rollback = getSectionContent(validation, "## Rollback Notes");
 
-  const shortSummary = toSingleLine(outcome) || taskId;
+  const shortSummary = toSingleLine(outcome) || normalizedTaskId;
 
   return {
-    branchName: `codex/${taskId}`,
+    branchName: `codex/${normalizedTaskId}`,
     commitMessage: `[codex] Publish ${truncate(shortSummary, 60)}`,
     prBody: [
       "## Outcome",
       "",
-      outcome || `See \`plans/${taskId}/goal.md\`.`,
+      outcome || `See \`plans/${normalizedTaskId}/goal.md\`.`,
       "",
       "## AI Usage And Provenance",
       "",
@@ -172,12 +190,12 @@ export async function buildTaskPublishDraft(
       "",
       "## Reasoning Artifacts",
       "",
-      `- plan path: \`plans/${taskId}/\``,
-      `- domain or evaluation concepts: ${conceptSummary || evalSummary || `See \`plans/${taskId}/concepts.md\`.`}`,
-      `- issue understanding: ${toSingleLine(problem) || `See \`plans/${taskId}/goal.md\`.`}`,
-      `- expected file scope: See \`plans/${taskId}/files.md\``,
-      `- implementation tasks: See \`plans/${taskId}/tasks.md\``,
-      `- step decomposition: See \`plans/${taskId}/steps.md\``,
+      `- plan path: \`plans/${normalizedTaskId}/\``,
+      `- domain or evaluation concepts: ${conceptSummary || evalSummary || `See \`plans/${normalizedTaskId}/concepts.md\`.`}`,
+      `- issue understanding: ${toSingleLine(problem) || `See \`plans/${normalizedTaskId}/goal.md\`.`}`,
+      `- expected file scope: See \`plans/${normalizedTaskId}/files.md\``,
+      `- implementation tasks: See \`plans/${normalizedTaskId}/tasks.md\``,
+      `- step decomposition: See \`plans/${normalizedTaskId}/steps.md\``,
       "- changes outside expected scope: none recorded yet",
       "",
       "## Evidence",
@@ -185,22 +203,22 @@ export async function buildTaskPublishDraft(
       "- `npm run validate`: passed locally before publish",
       "- demo output: update before merge if relevant",
       "- screenshots or logs if relevant: attach if needed",
-      `- held-out evaluation, if this was experiment or red-team work: ${evalSummary || `See \`plans/${taskId}/validation.md\`.`}`,
+      `- held-out evaluation, if this was experiment or red-team work: ${evalSummary || `See \`plans/${normalizedTaskId}/validation.md\`.`}`,
       "",
       "## Risk Check",
       "",
-      `- what could still be wrong: See \`plans/${taskId}/validation.md\``,
-      `- what did the agent assume: ${assumptionSummary || `See \`plans/${taskId}/tasks.md\`.`}`,
-      `- signs of reward hacking, if relevant: ${evalSummary || `See \`plans/${taskId}/concepts.md\`.`}`,
-      `- what needs manual verification: See \`plans/${taskId}/validation.md\``,
+      `- what could still be wrong: See \`plans/${normalizedTaskId}/validation.md\``,
+      `- what did the agent assume: ${assumptionSummary || `See \`plans/${normalizedTaskId}/tasks.md\`.`}`,
+      `- signs of reward hacking, if relevant: ${evalSummary || `See \`plans/${normalizedTaskId}/concepts.md\`.`}`,
+      `- what needs manual verification: See \`plans/${normalizedTaskId}/validation.md\``,
       "",
       "## Rollback",
       "",
-      rollback || `See \`plans/${taskId}/validation.md\`.`,
+      rollback || `See \`plans/${normalizedTaskId}/validation.md\`.`,
     ].join("\n"),
     prTitle: `[task] ${truncate(shortSummary, 72)}`,
     taskDirectory,
-    taskId,
+    taskId: normalizedTaskId,
   };
 }
 
@@ -211,15 +229,29 @@ export async function publishTask(
 ): Promise<TaskPublishResult> {
   const draft = await buildTaskPublishDraft(rootDir, taskId);
   const runCommand = options.runCommand ?? defaultRunCommand;
+  const allowedPaths = await readAllowedScopePaths(draft.taskDirectory, taskId);
 
   if (!options.skipValidate) {
     await runCommand("npm", ["run", "validate"], rootDir);
   }
 
   const gitStatus = await runCommand("git", ["status", "--porcelain"], rootDir);
+  const changedFiles = listChangedFiles(gitStatus);
 
-  if (gitStatus.trim().length === 0) {
+  if (changedFiles.length === 0) {
     throw new NoChangesToPublishError();
+  }
+
+  const unexpectedFiles = changedFiles.filter(
+    (filePath) => !matchesAllowedScope(filePath, allowedPaths),
+  );
+
+  if (unexpectedFiles.length > 0) {
+    throw new ScopeDriftError(
+      draft.taskDirectory,
+      allowedPaths,
+      unexpectedFiles,
+    );
   }
 
   const currentBranch = (
@@ -237,7 +269,7 @@ export async function publishTask(
 
   plannedCommands.push(
     {
-      args: ["add", "-A"],
+      args: ["add", ...changedFiles],
       command: "git",
     },
     {
@@ -386,6 +418,93 @@ async function findUnfilledPlanFiles(
     placeholderMarkers: [...placeholderMarkers],
     unfilledFiles: [...unfilledFiles],
   };
+}
+
+async function readAllowedScopePaths(
+  taskDirectory: string,
+  taskId: string,
+): Promise<string[]> {
+  const filesMarkdown = await fs.readFile(
+    path.join(taskDirectory, "files.md"),
+    "utf8",
+  );
+  const confirmedPaths = extractScopePaths(
+    getSectionContent(filesMarkdown, "## Confirmed Files"),
+  );
+  const candidatePaths = extractScopePaths(
+    getSectionContent(filesMarkdown, "## Candidate Files"),
+  );
+
+  return dedupePaths([
+    ...confirmedPaths,
+    ...candidatePaths,
+    normalizeScopePath(`plans/${taskId}/`),
+  ]);
+}
+
+function extractScopePaths(section: string): string[] {
+  return section
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("- "))
+    .map((line) => line.slice(2).trim())
+    .map(extractScopePathFromBullet)
+    .filter((line): line is string => line !== null)
+    .map(normalizeScopePath);
+}
+
+function extractScopePathFromBullet(bullet: string): string | null {
+  const backtickedPath = bullet.match(/`([^`]+)`/);
+
+  if (backtickedPath?.[1]) {
+    return backtickedPath[1];
+  }
+
+  const rawPath = bullet.trim();
+
+  if (rawPath.length === 0 || rawPath.includes(" ")) {
+    return null;
+  }
+
+  return rawPath;
+}
+
+function dedupePaths(paths: ReadonlyArray<string>): string[] {
+  return [...new Set(paths.filter((value) => value.length > 0))];
+}
+
+function normalizeScopePath(filePath: string): string {
+  return filePath.replaceAll("\\", "/").trim();
+}
+
+function listChangedFiles(gitStatus: string): string[] {
+  return gitStatus
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const rawPath = line.startsWith("?? ") ? line.slice(3) : line.slice(3);
+
+      if (rawPath.includes(" -> ")) {
+        return rawPath.split(" -> ").at(-1) ?? rawPath;
+      }
+
+      return rawPath;
+    })
+    .map(normalizeScopePath);
+}
+
+function matchesAllowedScope(
+  filePath: string,
+  allowedPaths: ReadonlyArray<string>,
+): boolean {
+  return allowedPaths.some((allowedPath) => {
+    if (allowedPath.endsWith("/")) {
+      return filePath.startsWith(allowedPath);
+    }
+
+    return filePath === allowedPath || filePath.startsWith(`${allowedPath}/`);
+  });
 }
 
 function getSectionContent(markdown: string, heading: string): string {
