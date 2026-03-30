@@ -16,9 +16,12 @@ const REQUIRED_AGENT_PROMPTS = [
   ".agents/repo-maintenance.md",
 ] as const;
 
+const REQUIRED_REPO_INSTRUCTIONS = ["AGENTS.md", "CLAUDE.md"] as const;
+
 const REQUIRED_GUIDES = [
   "docs/agent-failure-modes.md",
   "docs/non-coder-workflow.md",
+  "docs/template-setup.md",
 ] as const;
 
 const REQUIRED_TEMPLATES = [
@@ -36,6 +39,7 @@ export interface RepositoryHealthReport {
   readonly agentPromptFiles: number;
   readonly anchoredDocuments: number;
   readonly guideDocuments: number;
+  readonly instructionFiles: number;
   readonly issues: ReadonlyArray<string>;
   readonly markdownDocuments: number;
   readonly policyRuleFiles: number;
@@ -158,6 +162,25 @@ export const RepositoryHealthServiceLive = Layer.effect(
                 ".md",
               ),
           });
+          const instructionFiles = yield* Effect.tryPromise({
+            catch: (cause) =>
+              toRepositoryInspectionError(resolvedRootDir, cause),
+            try: async () => {
+              let present = 0;
+
+              for (const requiredInstruction of REQUIRED_REPO_INSTRUCTIONS) {
+                if (
+                  await fileExists(
+                    path.join(resolvedRootDir, requiredInstruction),
+                  )
+                ) {
+                  present += 1;
+                }
+              }
+
+              return present;
+            },
+          });
           const workflowFiles = yield* Effect.tryPromise({
             catch: (cause) =>
               toRepositoryInspectionError(resolvedRootDir, cause),
@@ -211,6 +234,7 @@ export const RepositoryHealthServiceLive = Layer.effect(
           ).length;
 
           const requiredFiles = [
+            ...REQUIRED_REPO_INSTRUCTIONS,
             ...REQUIRED_AGENT_PROMPTS,
             ...REQUIRED_GUIDES,
             ...REQUIRED_TEMPLATES,
@@ -239,6 +263,12 @@ export const RepositoryHealthServiceLive = Layer.effect(
           if (agentPromptFiles === 0) {
             issues.push(
               "No background-agent prompt assets were found in .agents/.",
+            );
+          }
+
+          if (instructionFiles < REQUIRED_REPO_INSTRUCTIONS.length) {
+            issues.push(
+              "The repository instructions are incomplete. Keep both CLAUDE.md and AGENTS.md.",
             );
           }
 
@@ -278,6 +308,7 @@ export const RepositoryHealthServiceLive = Layer.effect(
             agentPromptFiles,
             anchoredDocuments,
             guideDocuments,
+            instructionFiles,
             issues,
             markdownDocuments: markdownFiles.length,
             policyRuleFiles,

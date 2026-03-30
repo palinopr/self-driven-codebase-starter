@@ -1,10 +1,11 @@
-# Self-Driven Codebase Starter
+# Self-Driven Product Template
 
-This repository is a minimal TypeScript starter for building an agent-friendly codebase.
+This repository is a reusable TypeScript template for building products with AI agents without giving up review, tests, or repo discipline.
 
 It includes:
 
 - a checked-in repo contract in `CLAUDE.md`
+- a cross-tool instruction file in `AGENTS.md`
 - a single validation entrypoint in `npm run validate`
 - TypeScript typechecking
 - Biome formatting and linting
@@ -15,9 +16,18 @@ It includes:
 - a repository health report that inspects the starter’s own guardrails
 - issue and pull request templates for non-coder-friendly AI workflows
 - docs that explain agent failure modes and the safe operating model
+- a template setup guide for turning this repo into a real product repo
 - structured JSON logging
 - prompt assets and scheduled validation for background-agent readiness
 - GitHub Actions CI for pull requests
+
+## Use This Template
+
+1. Click `Use this template` on GitHub.
+2. Rename the product in `package.json`, `README.md`, and `docs/architecture.md`.
+3. Read `docs/template-setup.md` before asking for the first feature.
+4. Open one small issue with `.github/ISSUE_TEMPLATE/ai-build-request.yml`.
+5. Keep `npm run validate` and `npm run demo:health` green as the repo grows.
 
 ## Commands
 
@@ -55,6 +65,7 @@ src/config/          configuration boundaries
 src/observability/   structured logging boundary
 src/services/        Effect-based services
 test/                tests
+AGENTS.md            cross-tool agent instructions
 CLAUDE.md            repo instructions for agents
 sgconfig.yml         ast-grep project config
 ```
@@ -74,7 +85,7 @@ These are starter constraints, not a final architecture. Tighten them as pattern
 
 ## Implemented Phases
 
-This repo now contains the full rollout described earlier:
+This repo now contains the full template rollout described earlier:
 
 1. repo instructions and a single validation command
 2. CI and structural policy checks
@@ -84,6 +95,7 @@ This repo now contains the full rollout described earlier:
 6. markdown drift anchors plus `docs:check` and `docs:stamp`
 7. background-agent scaffolding in `docs/background-agents.md`, `.agents/`, and nightly validation
 8. non-coder operating guides plus issue and PR templates for safer AI-assisted shipping
+9. a reusable setup guide so future projects inherit the same guardrails on day one
 
 ## Docs Drift
 
@@ -97,9 +109,10 @@ Run `npm run docs:stamp` after reviewing intentional code changes that require d
 
 ## Repository Health
 
-`npm run demo:health` prints a JSON report for the current repository. It tells you whether the starter still has:
+`npm run demo:health` prints a JSON report for the current repository. It tells you whether the template still has:
 
 - anchored Markdown docs
+- repo instruction files
 - policy rules
 - background-agent prompts
 - non-coder operating guides
@@ -113,8 +126,10 @@ That makes the repo able to inspect its own engineering scaffolding, not just de
 
 Start with these files:
 
+- `docs/template-setup.md`
 - `docs/non-coder-workflow.md`
 - `docs/agent-failure-modes.md`
+- `AGENTS.md`
 - `.github/ISSUE_TEMPLATE/ai-build-request.yml`
 - `.github/pull_request_template.md`
 

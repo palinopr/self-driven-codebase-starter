@@ -25,6 +25,18 @@ async function createFixtureRoot(): Promise<string> {
   await mkdir(path.join(rootDir, "src"), { recursive: true });
 
   await writeFile(
+    path.join(rootDir, "CLAUDE.md"),
+    "# Repository Instructions\n",
+  );
+  await writeFile(
+    path.join(rootDir, "AGENTS.md"),
+    [
+      '<!-- drift path="CLAUDE.md" hash="" -->',
+      "# Agent Instructions",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
     path.join(rootDir, ".agents", "docs-refresh.md"),
     "# Docs Refresh\n",
   );
@@ -94,10 +106,23 @@ async function createFixtureRoot(): Promise<string> {
       "",
     ].join("\n"),
   );
+  await writeFile(
+    path.join(rootDir, "docs", "template-setup.md"),
+    [
+      "# Template Setup",
+      "",
+      '<!-- drift path="CLAUDE.md" hash="" -->',
+      "",
+      "This fixture documents template setup.",
+      "",
+    ].join("\n"),
+  );
 
+  await stampFile(rootDir, "AGENTS.md");
   await stampFile(rootDir, path.join("docs", "architecture.md"));
   await stampFile(rootDir, path.join("docs", "non-coder-workflow.md"));
   await stampFile(rootDir, path.join("docs", "agent-failure-modes.md"));
+  await stampFile(rootDir, path.join("docs", "template-setup.md"));
 
   return rootDir;
 }
@@ -115,10 +140,11 @@ describe("inspectRepositoryHealth", () => {
 
       expect(report).toEqual({
         agentPromptFiles: 3,
-        anchoredDocuments: 3,
-        guideDocuments: 2,
+        anchoredDocuments: 5,
+        guideDocuments: 3,
+        instructionFiles: 2,
         issues: [],
-        markdownDocuments: 7,
+        markdownDocuments: 10,
         policyRuleFiles: 1,
         staleAnchors: 0,
         status: "healthy",

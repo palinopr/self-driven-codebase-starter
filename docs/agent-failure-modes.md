@@ -1,6 +1,6 @@
-<!-- drift path="CLAUDE.md" hash="158cdfd474e8ff4f" -->
+<!-- drift path="CLAUDE.md" hash="3fc225f1b0d4b277" -->
 <!-- drift path="rules/no-throw-new-error.yml" hash="44baf5ef71e2a831" -->
-<!-- drift path="src/services/repository-health-service.ts" hash="ce3fab6a038641dc" -->
+<!-- drift path="src/services/repository-health-service.ts" hash="88fee7e89208e9a9" -->
 # Agent Failure Modes
 
 AI coding systems fail in repeatable ways. This repository is designed to reduce those failures, not pretend they do not exist.
@@ -35,7 +35,7 @@ The agent updates docs to sound complete even when the implementation is narrowe
 
 ## How This Repo Counters Those Problems
 
-- `CLAUDE.md` keeps standing repo instructions checked in.
+- `CLAUDE.md` and `AGENTS.md` keep standing repo instructions checked in.
 - `ast-grep` blocks some high-risk coding patterns.
 - `docs:check` and `docs:stamp` keep Markdown tied to code.
 - `demo:health` checks whether the repo still has its required safeguards.
@@ -51,4 +51,3 @@ Trust a stack of evidence:
 - understandable demo output
 - skeptical review
 - a rollback path
-
