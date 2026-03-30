@@ -1,0 +1,12 @@
+id: no-process-stdout-outside-logger
+language: TypeScript
+severity: error
+message: Write to stdout only through the logger boundary or scripts.
+note: Keep application observability centralized in src/observability/app-logger.ts.
+files:
+  - src/**/*.ts
+  - src/**/*.tsx
+ignores:
+  - src/observability/app-logger.ts
+rule:
+  pattern: process.stdout.write($VALUE)

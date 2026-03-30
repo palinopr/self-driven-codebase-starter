@@ -1,0 +1,11 @@
+id: no-throw-new-error
+language: TypeScript
+severity: error
+message: Avoid throwing generic errors in application code.
+note: Return an explicit failure value or handle the error at a controlled boundary.
+files:
+  - src/**/*.ts
+  - src/**/*.tsx
+rule:
+  pattern: throw new Error($MESSAGE)
+

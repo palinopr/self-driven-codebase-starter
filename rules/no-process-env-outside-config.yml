@@ -1,0 +1,15 @@
+id: no-process-env-outside-config
+language: TypeScript
+severity: error
+message: Read environment variables only in src/config/env.ts.
+note: Route configuration through the config boundary so the rest of the app stays deterministic.
+files:
+  - src/**/*.ts
+  - src/**/*.tsx
+ignores:
+  - src/config/env.ts
+rule:
+  any:
+    - pattern: process.env.$NAME
+    - pattern: process.env[$NAME]
+

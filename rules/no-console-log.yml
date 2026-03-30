@@ -1,0 +1,11 @@
+id: no-console-log
+language: TypeScript
+severity: error
+message: Do not leave console.log in application code.
+note: Use structured logging or keep debug output in scripts and tests only.
+files:
+  - src/**/*.ts
+  - src/**/*.tsx
+rule:
+  pattern: console.log($$$ARGS)
+

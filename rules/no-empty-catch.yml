@@ -1,0 +1,19 @@
+id: no-empty-catch
+language: TypeScript
+severity: error
+message: Empty catch blocks are not allowed.
+note: Handle the error explicitly, return a failure result, or remove the catch block.
+files:
+  - src/**/*.ts
+  - src/**/*.tsx
+rule:
+  any:
+    - pattern: |
+        try {
+          $$$BODY
+        } catch ($ERROR) {}
+    - pattern: |
+        try {
+          $$$BODY
+        } catch {}
+

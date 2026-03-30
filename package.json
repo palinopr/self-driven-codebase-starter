@@ -1,0 +1,32 @@
+{
+  "name": "self-driven-codebase-starter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "ast-grep": "ast-grep scan",
+    "docs:check": "tsx scripts/check-docs-drift.ts",
+    "docs:stamp": "tsx scripts/stamp-docs-drift.ts",
+    "demo:greet": "tsx scripts/run-greeting.ts",
+    "validate": "npm run typecheck && npm run lint && npm run test && npm run ast-grep && npm run docs:check"
+  },
+  "devDependencies": {
+    "@ast-grep/cli": "^0.39.5",
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^24.6.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "effect": "^3.21.0"
+  }
+}

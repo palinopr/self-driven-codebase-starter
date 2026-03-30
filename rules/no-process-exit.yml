@@ -1,0 +1,10 @@
+id: no-process-exit
+language: TypeScript
+severity: error
+message: Do not terminate the process from application code.
+note: Return an error to the caller or let the runtime boundary decide how to exit.
+files:
+  - src/**/*.ts
+  - src/**/*.tsx
+rule:
+  pattern: process.exit($CODE)
