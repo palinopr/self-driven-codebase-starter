@@ -1,0 +1,442 @@
+import { execFile } from "node:child_process";
+import { promises as fs } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
+
+const REQUIRED_PLAN_FILES = [
+  "goal.md",
+  "concepts.md",
+  "files.md",
+  "tasks.md",
+  "steps.md",
+  "validation.md",
+] as const;
+
+const TEMPLATE_PLACEHOLDER_MARKERS = [
+  "State what the user should be able to do after this change.",
+  "Describe the broken flow, missing behavior, or reason this work exists.",
+  "Describe what proof would make this feel correct.",
+  "- concept:",
+  "  why it matters:",
+  "- file:",
+  "  why:",
+  "- file or area:",
+  "  why it should stay untouched:",
+  "- task 1",
+  "- task 2",
+  "- follow-up 1",
+  "- assumption 1",
+  "- open question 1",
+  "1. First implementation step",
+  "2. Second implementation step",
+  "3. Validation checkpoint",
+  "- command:",
+  "  expected signal:",
+  "- manual check:",
+  "  expected result:",
+  "- highest-risk area:",
+  "- what a human should inspect:",
+  "Describe how to undo the change safely if it behaves badly after merge.",
+] as const;
+
+export interface CommandSpec {
+  readonly args: ReadonlyArray<string>;
+  readonly command: string;
+}
+
+export interface TaskPublishDraft {
+  readonly branchName: string;
+  readonly commitMessage: string;
+  readonly prBody: string;
+  readonly prTitle: string;
+  readonly taskDirectory: string;
+  readonly taskId: string;
+}
+
+export interface TaskPublishOptions {
+  readonly dryRun?: boolean;
+  readonly runCommand?: CommandRunner;
+  readonly skipValidate?: boolean;
+}
+
+export interface TaskPublishResult extends TaskPublishDraft {
+  readonly plannedCommands: ReadonlyArray<CommandSpec>;
+  readonly prUrl: string | null;
+}
+
+export type CommandRunner = (
+  command: string,
+  args: ReadonlyArray<string>,
+  cwd: string,
+) => Promise<string>;
+
+export class MissingTaskPlanError extends Error {
+  readonly _tag = "MissingTaskPlanError";
+
+  constructor(
+    readonly taskDirectory: string,
+    readonly missingFiles: string[],
+  ) {
+    super(
+      `Task plan is incomplete in ${taskDirectory}. Missing: ${missingFiles.join(", ")}`,
+    );
+    this.name = "MissingTaskPlanError";
+  }
+}
+
+export class NoChangesToPublishError extends Error {
+  readonly _tag = "NoChangesToPublishError";
+
+  constructor() {
+    super("There are no local changes to publish.");
+    this.name = "NoChangesToPublishError";
+  }
+}
+
+export class UnfilledTaskPlanError extends Error {
+  readonly _tag = "UnfilledTaskPlanError";
+
+  constructor(
+    readonly taskDirectory: string,
+    readonly unfilledFiles: ReadonlyArray<string>,
+    readonly placeholderMarkers: ReadonlyArray<string>,
+  ) {
+    super(
+      `Task plan in ${taskDirectory} still contains template placeholders in: ${unfilledFiles.join(", ")}`,
+    );
+    this.name = "UnfilledTaskPlanError";
+  }
+}
+
+export async function buildTaskPublishDraft(
+  rootDir: string,
+  taskId: string,
+): Promise<TaskPublishDraft> {
+  const taskDirectory = path.join(rootDir, "plans", taskId);
+  const missingFiles = await findMissingPlanFiles(taskDirectory);
+
+  if (missingFiles.length > 0) {
+    throw new MissingTaskPlanError(taskDirectory, missingFiles);
+  }
+
+  const unfilledPlan = await findUnfilledPlanFiles(rootDir, taskDirectory);
+
+  if (unfilledPlan.unfilledFiles.length > 0) {
+    throw new UnfilledTaskPlanError(
+      taskDirectory,
+      unfilledPlan.unfilledFiles,
+      unfilledPlan.placeholderMarkers,
+    );
+  }
+
+  const goal = await fs.readFile(path.join(taskDirectory, "goal.md"), "utf8");
+  const concepts = await fs.readFile(
+    path.join(taskDirectory, "concepts.md"),
+    "utf8",
+  );
+  const validation = await fs.readFile(
+    path.join(taskDirectory, "validation.md"),
+    "utf8",
+  );
+  const tasks = await fs.readFile(path.join(taskDirectory, "tasks.md"), "utf8");
+
+  const outcome = getSectionContent(goal, "## User Outcome");
+  const problem = getSectionContent(goal, "## Current Problem");
+  const conceptSummary = summarizeBullets(concepts, "## Domain Concepts");
+  const evalSummary = summarizeBullets(concepts, "## Evaluation Concepts");
+  const assumptionSummary = summarizeBullets(
+    tasks,
+    "## Open Questions And Assumptions",
+  );
+  const rollback = getSectionContent(validation, "## Rollback Notes");
+
+  const shortSummary = toSingleLine(outcome) || taskId;
+
+  return {
+    branchName: `codex/${taskId}`,
+    commitMessage: `[codex] Publish ${truncate(shortSummary, 60)}`,
+    prBody: [
+      "## Outcome",
+      "",
+      outcome || `See \`plans/${taskId}/goal.md\`.`,
+      "",
+      "## AI Usage And Provenance",
+      "",
+      "- tools used: update before merge",
+      "- tasks assisted by AI: update before merge",
+      "- what was manually checked by a human: update before merge",
+      "- remaining human review focus: update before merge",
+      "",
+      "## Reasoning Artifacts",
+      "",
+      `- plan path: \`plans/${taskId}/\``,
+      `- domain or evaluation concepts: ${conceptSummary || evalSummary || `See \`plans/${taskId}/concepts.md\`.`}`,
+      `- issue understanding: ${toSingleLine(problem) || `See \`plans/${taskId}/goal.md\`.`}`,
+      `- expected file scope: See \`plans/${taskId}/files.md\``,
+      `- implementation tasks: See \`plans/${taskId}/tasks.md\``,
+      `- step decomposition: See \`plans/${taskId}/steps.md\``,
+      "- changes outside expected scope: none recorded yet",
+      "",
+      "## Evidence",
+      "",
+      "- `npm run validate`: passed locally before publish",
+      "- demo output: update before merge if relevant",
+      "- screenshots or logs if relevant: attach if needed",
+      `- held-out evaluation, if this was experiment or red-team work: ${evalSummary || `See \`plans/${taskId}/validation.md\`.`}`,
+      "",
+      "## Risk Check",
+      "",
+      `- what could still be wrong: See \`plans/${taskId}/validation.md\``,
+      `- what did the agent assume: ${assumptionSummary || `See \`plans/${taskId}/tasks.md\`.`}`,
+      `- signs of reward hacking, if relevant: ${evalSummary || `See \`plans/${taskId}/concepts.md\`.`}`,
+      `- what needs manual verification: See \`plans/${taskId}/validation.md\``,
+      "",
+      "## Rollback",
+      "",
+      rollback || `See \`plans/${taskId}/validation.md\`.`,
+    ].join("\n"),
+    prTitle: `[task] ${truncate(shortSummary, 72)}`,
+    taskDirectory,
+    taskId,
+  };
+}
+
+export async function publishTask(
+  rootDir: string,
+  taskId: string,
+  options: TaskPublishOptions = {},
+): Promise<TaskPublishResult> {
+  const draft = await buildTaskPublishDraft(rootDir, taskId);
+  const runCommand = options.runCommand ?? defaultRunCommand;
+
+  if (!options.skipValidate) {
+    await runCommand("npm", ["run", "validate"], rootDir);
+  }
+
+  const gitStatus = await runCommand("git", ["status", "--porcelain"], rootDir);
+
+  if (gitStatus.trim().length === 0) {
+    throw new NoChangesToPublishError();
+  }
+
+  const currentBranch = (
+    await runCommand("git", ["rev-parse", "--abbrev-ref", "HEAD"], rootDir)
+  ).trim();
+
+  const plannedCommands: CommandSpec[] = [];
+
+  if (currentBranch !== draft.branchName) {
+    plannedCommands.push({
+      args: ["switch", "-c", draft.branchName],
+      command: "git",
+    });
+  }
+
+  plannedCommands.push(
+    {
+      args: ["add", "-A"],
+      command: "git",
+    },
+    {
+      args: ["commit", "-m", draft.commitMessage],
+      command: "git",
+    },
+    {
+      args: ["push", "-u", "origin", draft.branchName],
+      command: "git",
+    },
+  );
+
+  let prUrl: string | null = null;
+
+  if (options.dryRun === true) {
+    plannedCommands.push({
+      args: [
+        "pr",
+        "create",
+        "--draft",
+        "--title",
+        draft.prTitle,
+        "--body-file",
+        "<tempfile>",
+      ],
+      command: "gh",
+    });
+
+    return {
+      ...draft,
+      plannedCommands,
+      prUrl,
+    };
+  }
+
+  for (const commandSpec of plannedCommands) {
+    await runCommand(commandSpec.command, commandSpec.args, rootDir);
+  }
+
+  const prBodyFile = path.join(
+    await fs.mkdtemp(path.join(os.tmpdir(), "task-publish-")),
+    "pr-body.md",
+  );
+
+  try {
+    await fs.writeFile(prBodyFile, draft.prBody);
+
+    const prArgs = [
+      "pr",
+      "create",
+      "--draft",
+      "--title",
+      draft.prTitle,
+      "--body-file",
+      prBodyFile,
+    ] as const;
+
+    plannedCommands.push({
+      args: [...prArgs],
+      command: "gh",
+    });
+
+    prUrl = (await runCommand("gh", prArgs, rootDir)).trim() || null;
+  } finally {
+    await fs.rm(path.dirname(prBodyFile), { force: true, recursive: true });
+  }
+
+  return {
+    ...draft,
+    plannedCommands,
+    prUrl,
+  };
+}
+
+async function defaultRunCommand(
+  command: string,
+  args: ReadonlyArray<string>,
+  cwd: string,
+): Promise<string> {
+  const result = await execFileAsync(command, [...args], { cwd });
+
+  return result.stdout;
+}
+
+async function findMissingPlanFiles(taskDirectory: string): Promise<string[]> {
+  const missingFiles: string[] = [];
+
+  for (const requiredFile of REQUIRED_PLAN_FILES) {
+    const absolutePath = path.join(taskDirectory, requiredFile);
+
+    try {
+      await fs.access(absolutePath);
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        missingFiles.push(requiredFile);
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  return missingFiles;
+}
+
+async function findUnfilledPlanFiles(
+  rootDir: string,
+  taskDirectory: string,
+): Promise<{
+  placeholderMarkers: string[];
+  unfilledFiles: string[];
+}> {
+  const unfilledFiles = new Set<string>();
+  const placeholderMarkers = new Set<string>();
+  const templateDirectory = path.join(rootDir, "plans", "_template");
+
+  for (const requiredFile of REQUIRED_PLAN_FILES) {
+    const taskFilePath = path.join(taskDirectory, requiredFile);
+    const templateFilePath = path.join(templateDirectory, requiredFile);
+    const [taskContent, templateContent] = await Promise.all([
+      fs.readFile(taskFilePath, "utf8"),
+      fs.readFile(templateFilePath, "utf8"),
+    ]);
+
+    if (taskContent.trim() === templateContent.trim()) {
+      unfilledFiles.add(requiredFile);
+      placeholderMarkers.add("<file matches template>");
+      continue;
+    }
+
+    const taskLines = taskContent.split("\n").map((line) => line.trimEnd());
+
+    for (const marker of TEMPLATE_PLACEHOLDER_MARKERS) {
+      if (taskLines.includes(marker)) {
+        unfilledFiles.add(requiredFile);
+        placeholderMarkers.add(marker);
+      }
+    }
+  }
+
+  return {
+    placeholderMarkers: [...placeholderMarkers],
+    unfilledFiles: [...unfilledFiles],
+  };
+}
+
+function getSectionContent(markdown: string, heading: string): string {
+  const lines = markdown.split("\n");
+  const startIndex = lines.findIndex((line) => line.trim() === heading);
+
+  if (startIndex < 0) {
+    return "";
+  }
+
+  const contentLines: string[] = [];
+
+  for (const line of lines.slice(startIndex + 1)) {
+    if (line.startsWith("## ")) {
+      break;
+    }
+
+    contentLines.push(line);
+  }
+
+  return contentLines.join("\n").trim();
+}
+
+function summarizeBullets(markdown: string, heading: string): string {
+  const section = getSectionContent(markdown, heading);
+
+  if (section.length === 0) {
+    return "";
+  }
+
+  const bullets = section
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("- "))
+    .map((line) => line.slice(2).trim())
+    .filter((line) => line.length > 0);
+
+  return bullets.slice(0, 3).join("; ");
+}
+
+function toSingleLine(value: string): string {
+  return value
+    .replace(/\s+/g, " ")
+    .replace(/\s*[:;,.!?]\s*$/, "")
+    .trim();
+}
+
+function truncate(value: string, maxLength: number): string {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  return `${value.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+}

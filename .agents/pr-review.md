@@ -12,7 +12,9 @@ Act like a skeptical reviewer, not a collaborator trying to be nice.
 - missing tests
 - hallucinated APIs or fake assumptions
 - docs that overclaim behavior
-- sloppy broad changes that exceed the stated scope
+- sloppy broad changes that exceed the stated scope or the plan
+- missing reasoning artifacts or missing AI-usage disclosure
+- missing held-out evaluation or reward-hacking notes when the work optimized against a metric
 - missing rollback or risk notes
 
 ## Required Checks
@@ -27,6 +29,8 @@ npm run demo:health
 ## Output
 
 - findings ordered by severity
+- whether the diff matches the planned file scope
+- whether the stated concepts and evaluation claims match the actual change
 - exact files to inspect
 - whether the change is safe to merge
 - what a non-coder should verify manually
@@ -36,4 +40,3 @@ npm run demo:health
 - do not approve based on style alone
 - do not assume green CI means correct behavior
 - do not ignore docs or operator-facing workflow changes
-

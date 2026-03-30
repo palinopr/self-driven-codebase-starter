@@ -1,0 +1,34 @@
+{
+  "lastReviewedOn": "2026-03-30",
+  "filePlacementPatterns": [
+    {
+      "name": "Application code stays in src/",
+      "why": "The repo contract keeps product code under src/ and supporting material outside it.",
+      "evidence": ["CLAUDE.md", "docs/architecture.md"]
+    },
+    {
+      "name": "Task reasoning lives in plans/",
+      "why": "Feature work is expected to become explicit plan artifacts before broad edits.",
+      "evidence": ["plans/README.md", "docs/agent-reasoning-workflow.md"]
+    }
+  ],
+  "workflowPatterns": [
+    {
+      "name": "Validate before merge",
+      "why": "The repo relies on one validation entrypoint and health checks instead of ad-hoc confidence.",
+      "evidence": ["package.json", "src/services/repository-health-service.ts"]
+    },
+    {
+      "name": "Document AI provenance in pull requests",
+      "why": "Reviewers need to know what the AI changed, what a human checked, and where risk remains.",
+      "evidence": [".github/pull_request_template.md"]
+    }
+  ],
+  "reviewPatterns": [
+    {
+      "name": "Prefer minimal file scope",
+      "why": "Broad diffs hide reasoning mistakes and make regressions harder to spot.",
+      "evidence": ["CLAUDE.md", ".agents/reviewer.md"]
+    }
+  ]
+}

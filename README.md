@@ -6,6 +6,9 @@ It includes:
 
 - a checked-in repo contract in `CLAUDE.md`
 - a cross-tool instruction file in `AGENTS.md`
+- stage-aware planning artifacts in `plans/`
+- concept-aware planning so tasks name the domain ideas they depend on
+- repository memory files in `.memory/`
 - a single validation entrypoint in `npm run validate`
 - TypeScript typechecking
 - Biome formatting and linting
@@ -15,8 +18,11 @@ It includes:
 - a small `Effect`-based vertical slice with explicit services
 - a repository health report that inspects the starter’s own guardrails
 - issue and pull request templates for non-coder-friendly AI workflows
+- AI-usage disclosure and reasoning sections in pull requests
+- evaluation guidance for autonomous experiments and red-team loops
 - docs that explain agent failure modes and the safe operating model
 - a template setup guide for turning this repo into a real product repo
+- an agent reasoning workflow and role prompts for manager, worker, reviewer, and onboarding tasks
 - structured JSON logging
 - prompt assets and scheduled validation for background-agent readiness
 - GitHub Actions CI for pull requests
@@ -27,13 +33,18 @@ It includes:
 2. Rename the product in `package.json`, `README.md`, and `docs/architecture.md`.
 3. Read `docs/template-setup.md` before asking for the first feature.
 4. Open one small issue with `.github/ISSUE_TEMPLATE/ai-build-request.yml`.
-5. Keep `npm run validate` and `npm run demo:health` green as the repo grows.
+5. Run `npm run plan:new -- <task-id>` before broad feature work.
+6. Fill `concepts.md` when the task depends on domain semantics or evaluation rules.
+7. When the task is ready, run `npm run task:publish -- <task-id>` to create a branch, commit, push, and draft PR.
+8. Keep `npm run validate` and `npm run demo:health` green as the repo grows.
 
 ## Commands
 
 ```bash
 npm install
 npm run docs:stamp
+npm run plan:new -- 2026-03-30-first-feature
+npm run task:publish -- 2026-03-30-first-feature --dry-run
 npm run validate
 ```
 
@@ -46,6 +57,8 @@ npm run test
 npm run ast-grep
 npm run docs:check
 npm run docs:stamp
+npm run plan:new -- 2026-03-30-first-feature
+npm run task:publish -- 2026-03-30-first-feature --dry-run
 npm run demo:greet -- Jaime
 npm run demo:health
 npm run format
@@ -55,9 +68,11 @@ npm run format
 
 ```text
 .agents/              prompt assets for background agents
+.memory/              repository-specific patterns and maintainer preferences
 .github/workflows/   CI
 .github/ISSUE_TEMPLATE/
 docs/                architecture and operations docs
+plans/               task reasoning artifacts and templates
 rules/               ast-grep policy rules
 scripts/             local automation and docs-drift checks
 src/                 application code
@@ -96,6 +111,8 @@ This repo now contains the full template rollout described earlier:
 7. background-agent scaffolding in `docs/background-agents.md`, `.agents/`, and nightly validation
 8. non-coder operating guides plus issue and PR templates for safer AI-assisted shipping
 9. a reusable setup guide so future projects inherit the same guardrails on day one
+10. stage-aware reasoning templates so issues turn into explicit plans before code
+11. repository-memory scaffolding plus AI provenance so the repo can remember how it prefers to evolve
 
 ## Docs Drift
 
@@ -113,8 +130,11 @@ Run `npm run docs:stamp` after reviewing intentional code changes that require d
 
 - anchored Markdown docs
 - repo instruction files
+- repository-memory files
+- task-planning templates
+- experiment and evaluation guidance
 - policy rules
-- background-agent prompts
+- background-agent and role prompts
 - non-coder operating guides
 - issue and pull request templates
 - required workflows
@@ -129,8 +149,12 @@ Start with these files:
 - `docs/template-setup.md`
 - `docs/non-coder-workflow.md`
 - `docs/agent-failure-modes.md`
+- `docs/agent-reasoning-workflow.md`
+- `docs/agent-eval-workflow.md`
+- `docs/repository-memory.md`
 - `AGENTS.md`
 - `.github/ISSUE_TEMPLATE/ai-build-request.yml`
 - `.github/pull_request_template.md`
+- `plans/README.md`
 
 Those files are the human layer of the system. They help you ask for smaller changes, review evidence instead of code confidence, and watch for common AI failure modes like context drift, memory loss, hallucinated APIs, and sloppy broad diffs.
