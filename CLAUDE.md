@@ -7,6 +7,7 @@
 - Add or update tests when behavior changes.
 - Update docs when commands, structure, or user-visible behavior changes.
 - Run `npm run docs:stamp` only after reviewing and updating anchored markdown.
+- Use the issue and PR templates when creating new work or reviewing finished work.
 
 ## Architecture
 
@@ -16,6 +17,7 @@
 - Prefer `Effect` services for error-heavy or IO-heavy boundaries.
 - Prefer named exports in new code.
 - Prefer small modules with explicit inputs and outputs.
+- Keep the non-coder operating guides in `docs/` accurate.
 
 ## Disallowed Patterns
 
@@ -45,3 +47,4 @@ npm run validate
 - If a policy rule needs to change, update the matching file in `rules/`.
 - Keep repo-level instructions here instead of repeating them in each session.
 - Background-agent prompt assets live in `.agents/`.
+- The non-coder workflow docs live in `docs/non-coder-workflow.md` and `docs/agent-failure-modes.md`.

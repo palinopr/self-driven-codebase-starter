@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Use the AI Build Request template
+    url: https://github.com/palinopr/self-driven-codebase-starter/issues/new/choose
+    about: Start with a scoped request instead of a blank issue.
+

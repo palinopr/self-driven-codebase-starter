@@ -13,6 +13,8 @@ It includes:
 - a docs-drift check for markdown anchors
 - a small `Effect`-based vertical slice with explicit services
 - a repository health report that inspects the starter’s own guardrails
+- issue and pull request templates for non-coder-friendly AI workflows
+- docs that explain agent failure modes and the safe operating model
 - structured JSON logging
 - prompt assets and scheduled validation for background-agent readiness
 - GitHub Actions CI for pull requests
@@ -44,6 +46,7 @@ npm run format
 ```text
 .agents/              prompt assets for background agents
 .github/workflows/   CI
+.github/ISSUE_TEMPLATE/
 docs/                architecture and operations docs
 rules/               ast-grep policy rules
 scripts/             local automation and docs-drift checks
@@ -80,6 +83,7 @@ This repo now contains the full rollout described earlier:
 5. structured logging through `src/observability/app-logger.ts`
 6. markdown drift anchors plus `docs:check` and `docs:stamp`
 7. background-agent scaffolding in `docs/background-agents.md`, `.agents/`, and nightly validation
+8. non-coder operating guides plus issue and PR templates for safer AI-assisted shipping
 
 ## Docs Drift
 
@@ -98,7 +102,20 @@ Run `npm run docs:stamp` after reviewing intentional code changes that require d
 - anchored Markdown docs
 - policy rules
 - background-agent prompts
+- non-coder operating guides
+- issue and pull request templates
 - required workflows
 - stale docs-drift anchors
 
 That makes the repo able to inspect its own engineering scaffolding, not just describe it in prose.
+
+## If You Do Not Code Much
+
+Start with these files:
+
+- `docs/non-coder-workflow.md`
+- `docs/agent-failure-modes.md`
+- `.github/ISSUE_TEMPLATE/ai-build-request.yml`
+- `.github/pull_request_template.md`
+
+Those files are the human layer of the system. They help you ask for smaller changes, review evidence instead of code confidence, and watch for common AI failure modes like context drift, memory loss, hallucinated APIs, and sloppy broad diffs.

@@ -1,7 +1,7 @@
 # Architecture
 
 <!-- drift path="src/services/greeting-service.ts" hash="f360d403ac19991d" -->
-<!-- drift path="src/services/repository-health-service.ts" hash="f6f16967b5919fc8" -->
+<!-- drift path="src/services/repository-health-service.ts" hash="ce3fab6a038641dc" -->
 <!-- drift path="src/observability/app-logger.ts" hash="22c93b724bbaa660" -->
 <!-- drift path="src/lib/docs-drift.ts" hash="a72d2e1a2804664b" -->
 

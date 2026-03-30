@@ -16,6 +16,9 @@ async function createFixtureRoot(): Promise<string> {
   const rootDir = await mkdtemp(path.join(os.tmpdir(), "repo-health-"));
 
   await mkdir(path.join(rootDir, ".agents"), { recursive: true });
+  await mkdir(path.join(rootDir, ".github", "ISSUE_TEMPLATE"), {
+    recursive: true,
+  });
   await mkdir(path.join(rootDir, ".github", "workflows"), { recursive: true });
   await mkdir(path.join(rootDir, "docs"), { recursive: true });
   await mkdir(path.join(rootDir, "rules"), { recursive: true });
@@ -28,6 +31,22 @@ async function createFixtureRoot(): Promise<string> {
   await writeFile(
     path.join(rootDir, ".agents", "repo-maintenance.md"),
     "# Repo Maintenance\n",
+  );
+  await writeFile(
+    path.join(rootDir, ".agents", "pr-review.md"),
+    "# PR Review\n",
+  );
+  await writeFile(
+    path.join(rootDir, ".github", "pull_request_template.md"),
+    "## Outcome\n",
+  );
+  await writeFile(
+    path.join(rootDir, ".github", "ISSUE_TEMPLATE", "ai-build-request.yml"),
+    "name: AI Build Request\n",
+  );
+  await writeFile(
+    path.join(rootDir, ".github", "ISSUE_TEMPLATE", "config.yml"),
+    "blank_issues_enabled: false\n",
   );
   await writeFile(
     path.join(rootDir, ".github", "workflows", "ci.yml"),
@@ -53,8 +72,32 @@ async function createFixtureRoot(): Promise<string> {
       "",
     ].join("\n"),
   );
+  await writeFile(
+    path.join(rootDir, "docs", "non-coder-workflow.md"),
+    [
+      "# Workflow",
+      "",
+      '<!-- drift path=".github/pull_request_template.md" hash="" -->',
+      "",
+      "This fixture documents the non-coder workflow.",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
+    path.join(rootDir, "docs", "agent-failure-modes.md"),
+    [
+      "# Failure Modes",
+      "",
+      '<!-- drift path="src/feature.ts" hash="" -->',
+      "",
+      "This fixture documents agent failure modes.",
+      "",
+    ].join("\n"),
+  );
 
   await stampFile(rootDir, path.join("docs", "architecture.md"));
+  await stampFile(rootDir, path.join("docs", "non-coder-workflow.md"));
+  await stampFile(rootDir, path.join("docs", "agent-failure-modes.md"));
 
   return rootDir;
 }
@@ -71,13 +114,15 @@ describe("inspectRepositoryHealth", () => {
       );
 
       expect(report).toEqual({
-        agentPromptFiles: 2,
-        anchoredDocuments: 1,
+        agentPromptFiles: 3,
+        anchoredDocuments: 3,
+        guideDocuments: 2,
         issues: [],
-        markdownDocuments: 3,
+        markdownDocuments: 7,
         policyRuleFiles: 1,
         staleAnchors: 0,
         status: "healthy",
+        templateFiles: 3,
         workflowFiles: 2,
       });
     } finally {
@@ -104,8 +149,8 @@ describe("inspectRepositoryHealth", () => {
       );
 
       expect(report.status).toBe("needs-attention");
-      expect(report.staleAnchors).toBe(1);
-      expect(report.issues).toContain("1 drift anchor is stale.");
+      expect(report.staleAnchors).toBe(2);
+      expect(report.issues).toContain("2 drift anchors are stale.");
       expect(report.issues).toContain(
         "Missing required repository file: .github/workflows/nightly-validation.yml",
       );

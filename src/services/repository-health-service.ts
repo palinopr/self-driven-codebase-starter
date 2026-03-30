@@ -12,7 +12,19 @@ import {
 
 const REQUIRED_AGENT_PROMPTS = [
   ".agents/docs-refresh.md",
+  ".agents/pr-review.md",
   ".agents/repo-maintenance.md",
+] as const;
+
+const REQUIRED_GUIDES = [
+  "docs/agent-failure-modes.md",
+  "docs/non-coder-workflow.md",
+] as const;
+
+const REQUIRED_TEMPLATES = [
+  ".github/ISSUE_TEMPLATE/ai-build-request.yml",
+  ".github/ISSUE_TEMPLATE/config.yml",
+  ".github/pull_request_template.md",
 ] as const;
 
 const REQUIRED_WORKFLOWS = [
@@ -23,11 +35,13 @@ const REQUIRED_WORKFLOWS = [
 export interface RepositoryHealthReport {
   readonly agentPromptFiles: number;
   readonly anchoredDocuments: number;
+  readonly guideDocuments: number;
   readonly issues: ReadonlyArray<string>;
   readonly markdownDocuments: number;
   readonly policyRuleFiles: number;
   readonly staleAnchors: number;
   readonly status: "healthy" | "needs-attention";
+  readonly templateFiles: number;
   readonly workflowFiles: number;
 }
 
@@ -153,6 +167,40 @@ export const RepositoryHealthServiceLive = Layer.effect(
                 ".yml",
               ),
           });
+          const guideDocuments = yield* Effect.tryPromise({
+            catch: (cause) =>
+              toRepositoryInspectionError(resolvedRootDir, cause),
+            try: async () => {
+              let present = 0;
+
+              for (const requiredGuide of REQUIRED_GUIDES) {
+                if (
+                  await fileExists(path.join(resolvedRootDir, requiredGuide))
+                ) {
+                  present += 1;
+                }
+              }
+
+              return present;
+            },
+          });
+          const templateFiles = yield* Effect.tryPromise({
+            catch: (cause) =>
+              toRepositoryInspectionError(resolvedRootDir, cause),
+            try: async () => {
+              let present = 0;
+
+              for (const requiredTemplate of REQUIRED_TEMPLATES) {
+                if (
+                  await fileExists(path.join(resolvedRootDir, requiredTemplate))
+                ) {
+                  present += 1;
+                }
+              }
+
+              return present;
+            },
+          });
           const anchoredDocuments = new Set(
             anchors.map((anchor) => anchor.markdownPath),
           ).size;
@@ -164,6 +212,8 @@ export const RepositoryHealthServiceLive = Layer.effect(
 
           const requiredFiles = [
             ...REQUIRED_AGENT_PROMPTS,
+            ...REQUIRED_GUIDES,
+            ...REQUIRED_TEMPLATES,
             ...REQUIRED_WORKFLOWS,
           ];
           const missingFiles: string[] = [];
@@ -192,6 +242,18 @@ export const RepositoryHealthServiceLive = Layer.effect(
             );
           }
 
+          if (guideDocuments < REQUIRED_GUIDES.length) {
+            issues.push(
+              "The non-coder operating guides are incomplete in docs/.",
+            );
+          }
+
+          if (templateFiles < REQUIRED_TEMPLATES.length) {
+            issues.push(
+              "The issue or pull request templates are incomplete in .github/.",
+            );
+          }
+
           if (workflowFiles === 0) {
             issues.push(
               "No GitHub workflow files were found in .github/workflows/.",
@@ -215,11 +277,13 @@ export const RepositoryHealthServiceLive = Layer.effect(
           const report: RepositoryHealthReport = {
             agentPromptFiles,
             anchoredDocuments,
+            guideDocuments,
             issues,
             markdownDocuments: markdownFiles.length,
             policyRuleFiles,
             staleAnchors,
             status: issues.length === 0 ? "healthy" : "needs-attention",
+            templateFiles,
             workflowFiles,
           };
 
