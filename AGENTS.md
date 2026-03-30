@@ -1,4 +1,7 @@
-# Repository Instructions
+<!-- drift path="CLAUDE.md" hash="3fc225f1b0d4b277" -->
+# Agent Instructions
+
+This repository keeps its canonical repo contract in `CLAUDE.md`. This file mirrors the same operating rules for tools that look for `AGENTS.md`.
 
 ## Workflow
 
@@ -8,7 +11,6 @@
 - Update docs when commands, structure, or user-visible behavior changes.
 - Run `npm run docs:stamp` only after reviewing and updating anchored markdown.
 - Use the issue and PR templates when creating new work or reviewing finished work.
-- When cloning from this template, complete `docs/template-setup.md` before the first feature PR.
 
 ## Architecture
 
@@ -19,7 +21,6 @@
 - Prefer named exports in new code.
 - Prefer small modules with explicit inputs and outputs.
 - Keep the non-coder operating guides in `docs/` accurate.
-- Keep `AGENTS.md` aligned with this file so other tools see the same repo rules.
 
 ## Disallowed Patterns
 
@@ -30,24 +31,9 @@
 - Do not read `process.env` outside the config boundary.
 - Do not write to `process.stdout` outside the logger boundary or scripts.
 
-## Commands
+## Template Expectations
 
-```bash
-npm run typecheck
-npm run lint
-npm run test
-npm run ast-grep
-npm run docs:check
-npm run docs:stamp
-npm run demo:greet -- Jaime
-npm run demo:health
-npm run validate
-```
-
-## Notes
-
-- If a policy rule needs to change, update the matching file in `rules/`.
-- Keep repo-level instructions here instead of repeating them in each session.
-- `AGENTS.md` mirrors this contract for tools that do not read `CLAUDE.md`.
-- Background-agent prompt assets live in `.agents/`.
-- The non-coder workflow docs live in `docs/non-coder-workflow.md`, `docs/agent-failure-modes.md`, and `docs/template-setup.md`.
+- When starting a new product from this template, update `README.md`, `package.json`, and `docs/template-setup.md` before the first feature PR.
+- Keep `npm run validate`, `npm run demo:health`, and `src/services/repository-health-service.ts` working.
+- Replace the greeting demo only after the first real product slice exists and is tested.
+- Keep `CLAUDE.md` and `AGENTS.md` aligned when instructions change.

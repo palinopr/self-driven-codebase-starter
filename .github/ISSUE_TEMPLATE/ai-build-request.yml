@@ -1,0 +1,41 @@
+name: AI Build Request
+description: Ask the system to build one small, reviewable change.
+title: "[build] "
+labels:
+  - build-request
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: Describe the user outcome in plain English.
+      placeholder: Users should be able to...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Evidence
+      description: Describe what proof would make this feel correct to a non-coder.
+      placeholder: I should see..., The command should print..., The page should show...
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: What must not change or what rules matter here.
+      placeholder: No auth changes, Keep current layout, Do not change billing logic...
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risk Areas
+      description: What worries you most about this change.
+      placeholder: Data loss, confusing UX, bad copy, broken deploy...
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-Goals
+      description: What should explicitly stay out of scope.
+      placeholder: Do not redesign the whole app, Do not migrate the database...
+
