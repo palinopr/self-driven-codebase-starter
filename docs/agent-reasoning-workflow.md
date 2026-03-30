@@ -39,6 +39,14 @@ Run `npm run plan:new -- <task-id>` and fill:
 
 Keep the plan small, concrete, and reviewable.
 
+If you need a quick repo-wide readiness check before coding or publishing, run:
+
+```bash
+npm run plans:list
+```
+
+That command uses the same missing-file and placeholder rules enforced by `task:publish`.
+
 ## Why This Exists
 
 Agents often understand the high-level request but still fail by:

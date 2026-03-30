@@ -5,11 +5,14 @@ Use `plans/_template/` for any feature or multi-file change.
 ## How To Use This Folder
 
 1. Run `npm run plan:new -- <task-id>`.
-2. Fill `goal.md`, `concepts.md`, `files.md`, `tasks.md`, `steps.md`, and `validation.md` before broad edits.
-3. Keep the plan updated if the scope changes.
-4. Reference the plan path in the pull request.
+2. Run `npm run plans:list` any time you want a quick readiness view across all task plans.
+3. Fill `goal.md`, `concepts.md`, `files.md`, `tasks.md`, `steps.md`, and `validation.md` before broad edits.
+4. Keep the plan updated if the scope changes.
+5. Reference the plan path in the pull request.
 
 The command copies the current `plans/_template/` files and refuses to overwrite an existing plan folder.
+
+`plans:list` marks a task as `READY` only when all required files exist and none of them still contain untouched template content.
 
 When the task is ready to publish, run:
 

@@ -34,9 +34,10 @@ It includes:
 3. Read `docs/template-setup.md` before asking for the first feature.
 4. Open one small issue with `.github/ISSUE_TEMPLATE/ai-build-request.yml`.
 5. Run `npm run plan:new -- <task-id>` before broad feature work.
-6. Fill `concepts.md` when the task depends on domain semantics or evaluation rules, and keep `files.md` honest about the expected diff.
-7. When the task is ready, run `npm run task:publish -- <task-id>` to create a branch, commit, push, and draft PR.
-8. Keep `npm run validate` and `npm run demo:health` green as the repo grows.
+6. Run `npm run plans:list` if you want a quick readiness report across existing task plans.
+7. Fill `concepts.md` when the task depends on domain semantics or evaluation rules, and keep `files.md` honest about the expected diff.
+8. When the task is ready, run `npm run task:publish -- <task-id>` to create a branch, commit, push, and draft PR.
+9. Keep `npm run validate` and `npm run demo:health` green as the repo grows.
 
 ## Commands
 
@@ -44,6 +45,7 @@ It includes:
 npm install
 npm run docs:stamp
 npm run plan:new -- 2026-03-30-first-feature
+npm run plans:list
 npm run task:publish -- 2026-03-30-first-feature --dry-run
 npm run validate
 ```
@@ -58,6 +60,7 @@ npm run ast-grep
 npm run docs:check
 npm run docs:stamp
 npm run plan:new -- 2026-03-30-first-feature
+npm run plans:list
 npm run task:publish -- 2026-03-30-first-feature --dry-run
 npm run demo:greet -- Jaime
 npm run demo:health
@@ -158,5 +161,7 @@ Start with these files:
 - `plans/README.md`
 
 Those files are the human layer of the system. They help you ask for smaller changes, review evidence instead of code confidence, and watch for common AI failure modes like context drift, memory loss, hallucinated APIs, and sloppy broad diffs.
+
+`plans:list` gives you a local readiness report for every task folder, using the same missing-file and placeholder checks enforced by `task:publish`.
 
 `task:publish` also checks the current diff against `plans/<task-id>/files.md` before it stages anything. If the diff has grown outside the planned file scope, the publish step stops and asks you to fix the plan or the changes first.
