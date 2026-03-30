@@ -12,6 +12,7 @@ It includes:
 - `ast-grep` rules for structural policy checks
 - a docs-drift check for markdown anchors
 - a small `Effect`-based vertical slice with explicit services
+- a repository health report that inspects the starter’s own guardrails
 - structured JSON logging
 - prompt assets and scheduled validation for background-agent readiness
 - GitHub Actions CI for pull requests
@@ -34,6 +35,7 @@ npm run ast-grep
 npm run docs:check
 npm run docs:stamp
 npm run demo:greet -- Jaime
+npm run demo:health
 npm run format
 ```
 
@@ -73,7 +75,7 @@ This repo now contains the full rollout described earlier:
 
 1. repo instructions and a single validation command
 2. CI and structural policy checks
-3. a tested vertical slice in `src/services/greeting-service.ts`
+3. tested vertical slices in `src/services/greeting-service.ts` and `src/services/repository-health-service.ts`
 4. targeted `Effect` adoption for service composition and errors
 5. structured logging through `src/observability/app-logger.ts`
 6. markdown drift anchors plus `docs:check` and `docs:stamp`
@@ -88,3 +90,15 @@ Markdown files can declare anchors like this:
 ```
 
 Run `npm run docs:stamp` after reviewing intentional code changes that require doc updates. `npm run docs:check` fails when an anchored file changes without the markdown being restamped.
+
+## Repository Health
+
+`npm run demo:health` prints a JSON report for the current repository. It tells you whether the starter still has:
+
+- anchored Markdown docs
+- policy rules
+- background-agent prompts
+- required workflows
+- stale docs-drift anchors
+
+That makes the repo able to inspect its own engineering scaffolding, not just describe it in prose.

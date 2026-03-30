@@ -36,6 +36,7 @@ npm run ast-grep
 npm run docs:check
 npm run docs:stamp
 npm run demo:greet -- Jaime
+npm run demo:health
 npm run validate
 ```
 
